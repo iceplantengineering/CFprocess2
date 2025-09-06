@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operator Training & Certifications - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .training-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .overview-card {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overview-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success), var(--success-light));
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            background: linear-gradient(135deg, var(--success), var(--success-light));
+            margin-bottom: var(--space-4);
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .card-label {
+            color: var(--gray-600);
+            margin-bottom: var(--space-3);
+        }
+
+        .card-trend {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 0.9rem;
+        }
+
+        .trend-positive { color: var(--success); }
+        .trend-negative { color: var(--error); }
+        .trend-neutral { color: var(--gray-500); }
+
+        .operator-profiles {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .profiles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .search-filter {
+            display: flex;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .profiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .operator-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .operator-card:hover {
+            border-color: var(--secondary-purple);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .operator-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .operator-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .operator-info h4 {
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .operator-id {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
+        }
+
+        .certification-status {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .cert-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .cert-current { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .cert-expiring { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .cert-expired { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+
+        .training-progress {
+            margin-bottom: var(--space-4);
+        }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .progress-label {
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            margin: 0 var(--space-3);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--success-light));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-percentage {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .operator-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-md);
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .training-calendar {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+        }
+
+        .nav-button {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: var(--gray-100);
+        }
+
+        .current-month {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin: 0 var(--space-4);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: var(--space-2);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background: var(--gray-50);
+        }
+
+        .calendar-day.header {
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+            aspect-ratio: auto;
+        }
+
+        .calendar-day.other-month {
+            color: var(--gray-400);
+        }
+
+        .calendar-day.today {
+            background: var(--secondary-purple);
+            color: white;
+        }
+
+        .calendar-day.has-training {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+        }
+
+        .training-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--warning);
+            margin-top: auto;
+        }
+
+        .certifications-panel {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .cert-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: var(--space-5);
+        }
+
+        .cert-tab {
+            padding: var(--space-3) var(--space-6);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .cert-tab.active {
+            border-bottom-color: var(--secondary-purple);
+            color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .cert-content {
+            display: none;
+        }
+
+        .cert-content.active {
+            display: block;
+        }
+
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .cert-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            border-left: 4px solid var(--info);
+        }
+
+        .cert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .cert-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .cert-level {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .level-basic { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .level-intermediate { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .level-advanced { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .level-expert { background: rgba(139, 92, 246, 0.1); color: var(--secondary-purple); }
+
+        .cert-details {
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .cert-dates {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            margin-top: var(--space-3);
+        }
+
+        .date-item {
+            text-align: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-md);
+        }
+
+        .date-value {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .date-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .training-analytics {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .compliance-alerts {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(251, 191, 36, 0.05));
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--warning);
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+
+        .compliance-alert {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .alert-urgent { background: var(--error); }
+        .alert-warning { background: var(--warning); }
+        .alert-info { background: var(--info); }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-description {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .training-actions {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        .action-card {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .action-card:hover {
+            border-color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--secondary-purple);
+        }
+
+        .action-content {
+            flex: 1;
+        }
+
+        .action-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .action-description {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="operator-training.html" class="nav-item active">Training</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-graduation-cap"></i>
+                Operator Training & Certifications
+            </h1>
+            <div class="breadcrumb">Dashboard / Training & Certifications</div>
+        </div>
+
+        <!-- Training Overview -->
+        <div class="training-overview">
+            <div class="overview-card">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-value">32</div>
+                <div class="card-label">Total Operators</div>
+                <div class="card-trend trend-positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+2 this month</span>
+                </div>
+            </div>
+
+            <div class="overview-card">
+                <div class="card-icon" style="background: linear-gradient(135deg, var(--warning), var(--warning-light));">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="card-value">94.2%</div>
+                <div class="card-label">Certification Compliance</div>
+                <div class="card-trend trend-positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+3.1% this quarter</span>
+                </div>
+            </div>
+
+            <div class="overview-card">
+                <div class="card-icon" style="background: linear-gradient(135deg, var(--info), var(--info-light));">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="card-value">847</div>
+                <div class="card-label">Training Hours (YTD)</div>
+                <div class="card-trend trend-positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+15.3% vs last year</span>
+                </div>
+            </div>
+
+            <div class="overview-card">
+                <div class="card-icon" style="background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="card-value">7</div>
+                <div class="card-label">Expiring Certifications</div>
+                <div class="card-trend trend-negative">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Attention required</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operator Profiles -->
+        <div class="operator-profiles">
+            <div class="profiles-header">
+                <h3 style="color: var(--primary-blue); margin: 0;">
+                    <i class="fas fa-id-card"></i> Operator Training Profiles
+                </h3>
+                <div class="search-filter">
+                    <input type="text" class="form-input" placeholder="Search operators..." style="width: 250px;">
+                    <select class="form-input" style="width: 200px;">
+                        <option>All Departments</option>
+                        <option>Spinning</option>
+                        <option>Stabilization</option>
+                        <option>Carbonization</option>
+                        <option>Surface Treatment</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="profiles-grid">
+                <div class="operator-card" onclick="showOperatorDetails('OP-045')">
+                    <div class="operator-header">
+                        <div class="operator-avatar">JS</div>
+                        <div class="operator-info">
+                            <h4>John Smith</h4>
+                            <div class="operator-id">OP-045 | 5.2 years experience</div>
+                        </div>
+                    </div>
+                    <div class="certification-status">
+                        <span class="cert-badge cert-current">Level III Certified</span>
+                        <span class="cert-badge cert-expiring">Safety Cert (60d)</span>
+                    </div>
+                    <div class="training-progress">
+                        <div class="progress-item">
+                            <span class="progress-label">Advanced Process Control</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%;"></div>
+                            </div>
+                            <span class="progress-percentage">85%</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Quality Management</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 92%;"></div>
+                            </div>
+                            <span class="progress-percentage">92%</span>
+                        </div>
+                    </div>
+                    <div class="operator-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">28</div>
+                            <div class="stat-label">Training Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">96.2%</div>
+                            <div class="stat-label">Performance</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">4</div>
+                            <div class="stat-label">Certifications</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="operator-card" onclick="showOperatorDetails('OP-032')">
+                    <div class="operator-header">
+                        <div class="operator-avatar">SJ</div>
+                        <div class="operator-info">
+                            <h4>Sarah Johnson</h4>
+                            <div class="operator-id">OP-032 | 3.8 years experience</div>
+                        </div>
+                    </div>
+                    <div class="certification-status">
+                        <span class="cert-badge cert-current">Level II Certified</span>
+                        <span class="cert-badge cert-current">Safety Current</span>
+                    </div>
+                    <div class="training-progress">
+                        <div class="progress-item">
+                            <span class="progress-label">Equipment Maintenance</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 67%;"></div>
+                            </div>
+                            <span class="progress-percentage">67%</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Process Optimization</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 78%;"></div>
+                            </div>
+                            <span class="progress-percentage">78%</span>
+                        </div>
+                    </div>
+                    <div class="operator-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">22</div>
+                            <div class="stat-label">Training Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">91.8%</div>
+                            <div class="stat-label">Performance</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">3</div>
+                            <div class="stat-label">Certifications</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="operator-card" onclick="showOperatorDetails('OP-028')">
+                    <div class="operator-header">
+                        <div class="operator-avatar">MB</div>
+                        <div class="operator-info">
+                            <h4>Michael Brown</h4>
+                            <div class="operator-id">OP-028 | 7.1 years experience</div>
+                        </div>
+                    </div>
+                    <div class="certification-status">
+                        <span class="cert-badge cert-current">Master Certified</span>
+                        <span class="cert-badge cert-current">Trainer License</span>
+                    </div>
+                    <div class="training-progress">
+                        <div class="progress-item">
+                            <span class="progress-label">Leadership Development</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 94%;"></div>
+                            </div>
+                            <span class="progress-percentage">94%</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Advanced Troubleshooting</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 88%;"></div>
+                            </div>
+                            <span class="progress-percentage">88%</span>
+                        </div>
+                    </div>
+                    <div class="operator-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">45</div>
+                            <div class="stat-label">Training Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">98.1%</div>
+                            <div class="stat-label">Performance</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">6</div>
+                            <div class="stat-label">Certifications</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="operator-card" onclick="showOperatorDetails('OP-019')">
+                    <div class="operator-header">
+                        <div class="operator-avatar">LW</div>
+                        <div class="operator-info">
+                            <h4>Lisa Wilson</h4>
+                            <div class="operator-id">OP-019 | 2.3 years experience</div>
+                        </div>
+                    </div>
+                    <div class="certification-status">
+                        <span class="cert-badge cert-current">Level I Certified</span>
+                        <span class="cert-badge cert-expired">Safety Expired</span>
+                    </div>
+                    <div class="training-progress">
+                        <div class="progress-item">
+                            <span class="progress-label">Basic Operations</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 73%;"></div>
+                            </div>
+                            <span class="progress-percentage">73%</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Safety Protocols</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%;"></div>
+                            </div>
+                            <span class="progress-percentage">45%</span>
+                        </div>
+                    </div>
+                    <div class="operator-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">15</div>
+                            <div class="stat-label">Training Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">87.4%</div>
+                            <div class="stat-label">Performance</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">2</div>
+                            <div class="stat-label">Certifications</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Calendar -->
+        <div class="training-calendar">
+            <div class="calendar-header">
+                <h3 style="color: var(--primary-blue); margin: 0;">
+                    <i class="fas fa-calendar-alt"></i> Training Schedule
+                </h3>
+                <div class="calendar-nav">
+                    <button class="nav-button" onclick="changeMonth(-1)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="current-month">September 2024</span>
+                    <button class="nav-button" onclick="changeMonth(1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-day header">Sun</div>
+                <div class="calendar-day header">Mon</div>
+                <div class="calendar-day header">Tue</div>
+                <div class="calendar-day header">Wed</div>
+                <div class="calendar-day header">Thu</div>
+                <div class="calendar-day header">Fri</div>
+                <div class="calendar-day header">Sat</div>
+
+                <div class="calendar-day other-month">29</div>
+                <div class="calendar-day other-month">30</div>
+                <div class="calendar-day other-month">31</div>
+                <div class="calendar-day">1</div>
+                <div class="calendar-day">2</div>
+                <div class="calendar-day">3</div>
+                <div class="calendar-day">4</div>
+
+                <div class="calendar-day">5</div>
+                <div class="calendar-day today">6</div>
+                <div class="calendar-day">7</div>
+                <div class="calendar-day">8</div>
+                <div class="calendar-day has-training">
+                    9
+                    <div class="training-indicator"></div>
+                </div>
+                <div class="calendar-day">10</div>
+                <div class="calendar-day">11</div>
+
+                <div class="calendar-day">12</div>
+                <div class="calendar-day">13</div>
+                <div class="calendar-day has-training">
+                    14
+                    <div class="training-indicator"></div>
+                </div>
+                <div class="calendar-day">15</div>
+                <div class="calendar-day">16</div>
+                <div class="calendar-day">17</div>
+                <div class="calendar-day">18</div>
+
+                <div class="calendar-day">19</div>
+                <div class="calendar-day">20</div>
+                <div class="calendar-day">21</div>
+                <div class="calendar-day has-training">
+                    22
+                    <div class="training-indicator"></div>
+                </div>
+                <div class="calendar-day">23</div>
+                <div class="calendar-day">24</div>
+                <div class="calendar-day">25</div>
+
+                <div class="calendar-day">26</div>
+                <div class="calendar-day">27</div>
+                <div class="calendar-day">28</div>
+                <div class="calendar-day">29</div>
+                <div class="calendar-day">30</div>
+                <div class="calendar-day other-month">1</div>
+                <div class="calendar-day other-month">2</div>
+            </div>
+        </div>
+
+        <!-- Certifications Panel -->
+        <div class="certifications-panel">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-award"></i> Certification Programs
+            </h3>
+
+            <div class="cert-tabs">
+                <div class="cert-tab active" onclick="switchCertTab(0)">Active Certifications</div>
+                <div class="cert-tab" onclick="switchCertTab(1)">Available Programs</div>
+                <div class="cert-tab" onclick="switchCertTab(2)">Renewal Schedule</div>
+            </div>
+
+            <div class="cert-content active" id="cert-0">
+                <div class="cert-grid">
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Carbon Fiber Process Control</div>
+                            <div class="cert-level level-advanced">Advanced</div>
+                        </div>
+                        <div class="cert-details">
+                            Comprehensive understanding of carbon fiber manufacturing processes, quality control, and optimization techniques.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">24</div>
+                                <div class="date-label">Active Operators</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">18 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Safety & Compliance</div>
+                            <div class="cert-level level-basic">Required</div>
+                        </div>
+                        <div class="cert-details">
+                            Mandatory safety protocols, emergency procedures, and regulatory compliance for manufacturing operations.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">32</div>
+                                <div class="date-label">Certified Operators</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">12 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Equipment Maintenance</div>
+                            <div class="cert-level level-intermediate">Intermediate</div>
+                        </div>
+                        <div class="cert-details">
+                            Preventive maintenance, troubleshooting, and repair procedures for manufacturing equipment.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">18</div>
+                                <div class="date-label">Certified Operators</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">24 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Quality Management</div>
+                            <div class="cert-level level-advanced">Advanced</div>
+                        </div>
+                        <div class="cert-details">
+                            Statistical process control, quality assurance methodologies, and continuous improvement practices.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">14</div>
+                                <div class="date-label">Certified Operators</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">24 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Trainer Certification</div>
+                            <div class="cert-level level-expert">Expert</div>
+                        </div>
+                        <div class="cert-details">
+                            Qualified to train and mentor other operators, conduct assessments, and develop training materials.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">6</div>
+                                <div class="date-label">Certified Trainers</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">36 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Energy Management</div>
+                            <div class="cert-level level-intermediate">Intermediate</div>
+                        </div>
+                        <div class="cert-details">
+                            Energy efficiency optimization, monitoring systems, and sustainable manufacturing practices.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">11</div>
+                                <div class="date-label">Certified Operators</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">18 mo</div>
+                                <div class="date-label">Validity Period</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cert-content" id="cert-1">
+                <div class="cert-grid">
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Digital Manufacturing</div>
+                            <div class="cert-level level-intermediate">New Program</div>
+                        </div>
+                        <div class="cert-details">
+                            Industry 4.0 technologies, IoT integration, and data-driven manufacturing optimization.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">Oct 15</div>
+                                <div class="date-label">Launch Date</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">40 hrs</div>
+                                <div class="date-label">Duration</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Advanced Analytics</div>
+                            <div class="cert-level level-advanced">Coming Soon</div>
+                        </div>
+                        <div class="cert-details">
+                            Data analysis, machine learning applications, and predictive maintenance in manufacturing.
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">Q1 2025</div>
+                                <div class="date-label">Expected Launch</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">60 hrs</div>
+                                <div class="date-label">Duration</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cert-content" id="cert-2">
+                <div class="cert-grid">
+                    <div class="cert-card">
+                        <div class="cert-header">
+                            <div class="cert-title">Upcoming Renewals (Next 90 Days)</div>
+                            <div class="cert-level level-basic">7 Operators</div>
+                        </div>
+                        <div class="cert-details">
+                            Safety & Compliance certifications requiring renewal for operators: OP-045, OP-032, OP-019, OP-067, OP-088, OP-091, OP-102
+                        </div>
+                        <div class="cert-dates">
+                            <div class="date-item">
+                                <div class="date-value">Oct 15</div>
+                                <div class="date-label">Next Renewal</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-value">8 hrs</div>
+                                <div class="date-label">Training Required</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Analytics -->
+        <div class="training-analytics">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-chart-bar"></i> Training Analytics & Performance
+            </h3>
+            <div class="analytics-grid">
+                <div>
+                    <h4 style="margin-bottom: var(--space-3);">Training Completion Rates</h4>
+                    <div class="chart-container chart-small">
+                        <canvas id="completionChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: var(--space-3);">Certification Levels Distribution</h4>
+                    <div class="chart-container chart-small">
+                        <canvas id="levelsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Alerts -->
+        <div class="compliance-alerts">
+            <h3 style="color: var(--warning); margin-bottom: var(--space-4);">
+                <i class="fas fa-exclamation-triangle"></i> Compliance Alerts & Actions Required
+            </h3>
+            <div class="alert-list">
+                <div class="compliance-alert">
+                    <div class="alert-icon alert-urgent">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Expired Safety Certification - Lisa Wilson (OP-019)</div>
+                        <div class="alert-description">Safety certification expired 15 days ago. Operator requires immediate recertification before returning to production duties.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">15 days overdue</div>
+                </div>
+
+                <div class="compliance-alert">
+                    <div class="alert-icon alert-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Certification Renewals Due Soon</div>
+                        <div class="alert-description">7 operators have certifications expiring within 60 days. Schedule renewal training sessions to maintain compliance.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">Action needed</div>
+                </div>
+
+                <div class="compliance-alert">
+                    <div class="alert-icon alert-info">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">New Training Program Available</div>
+                        <div class="alert-description">Digital Manufacturing certification program launches October 15. Consider enrolling qualified operators for enhanced capabilities.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">Opportunity</div>
+                </div>
+
+                <div class="compliance-alert">
+                    <div class="alert-icon alert-info">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Training Milestone Achieved</div>
+                        <div class="alert-description">Michael Brown (OP-028) has completed Master Certification program. Consider promoting to Senior Operator or Training Lead role.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">Congratulations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="training-actions">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </h3>
+            <div class="action-grid">
+                <div class="action-card" onclick="scheduleTraining()">
+                    <div class="action-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="action-content">
+                        <div class="action-title">Schedule Training</div>
+                        <div class="action-description">Book training sessions and manage schedules</div>
+                    </div>
+                </div>
+
+                <div class="action-card" onclick="generateReports()">
+                    <div class="action-icon" style="background: var(--success);">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="action-content">
+                        <div class="action-title">Generate Reports</div>
+                        <div class="action-description">Export training and compliance reports</div>
+                    </div>
+                </div>
+
+                <div class="action-card" onclick="manageCertifications()">
+                    <div class="action-icon" style="background: var(--warning);">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="action-content">
+                        <div class="action-title">Manage Certifications</div>
+                        <div class="action-description">Update certification status and renewals</div>
+                    </div>
+                </div>
+
+                <div class="action-card" onclick="bulkNotifications()">
+                    <div class="action-icon" style="background: var(--info);">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="action-content">
+                        <div class="action-title">Send Notifications</div>
+                        <div class="action-description">Notify operators about training requirements</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMonth = 8; // September (0-based)
+        let currentYear = 2024;
+        let currentCertTab = 0;
+
+        // Calendar navigation
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                              "July", "August", "September", "October", "November", "December"];
+            document.querySelector('.current-month').textContent = 
+                `${monthNames[currentMonth]} ${currentYear}`;
+            
+            // In real application, this would regenerate the calendar
+            console.log(`Calendar changed to ${monthNames[currentMonth]} ${currentYear}`);
+        }
+
+        // Certification tabs
+        function switchCertTab(tabIndex) {
+            document.querySelectorAll('.cert-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.cert-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelectorAll('.cert-tab')[tabIndex].classList.add('active');
+            document.getElementById(`cert-${tabIndex}`).classList.add('active');
+            
+            currentCertTab = tabIndex;
+        }
+
+        // Show operator details
+        function showOperatorDetails(operatorId) {
+            console.log('Show details for operator:', operatorId);
+            // In real application, this would open a detailed view modal
+        }
+
+        // Quick action functions
+        function scheduleTraining() {
+            console.log('Schedule training session');
+            // Implementation for scheduling training
+        }
+
+        function generateReports() {
+            console.log('Generate training reports');
+            // Implementation for report generation
+        }
+
+        function manageCertifications() {
+            console.log('Manage certifications');
+            // Implementation for certification management
+        }
+
+        function bulkNotifications() {
+            console.log('Send bulk notifications');
+            // Implementation for sending notifications
+        }
+
+        // Initialize charts
+        function initTrainingCharts() {
+            // Training Completion Chart
+            const completionCtx = document.getElementById('completionChart').getContext('2d');
+            new Chart(completionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Safety', 'Process Control', 'Maintenance', 'Quality Mgmt', 'Energy Mgmt'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: [100, 94, 87, 78, 69],
+                        backgroundColor: [
+                            '#10b981',
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#ef4444'
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: { callback: function(value) { return value + '%'; } }
+                        }
+                    }
+                }
+            });
+
+            // Certification Levels Chart
+            const levelsCtx = document.getElementById('levelsChart').getContext('2d');
+            new Chart(levelsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Basic', 'Intermediate', 'Advanced', 'Expert'],
+                    datasets: [{
+                        data: [8, 14, 7, 3],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#10b981',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initTrainingCharts();
+            
+            // Add click handlers to calendar days
+            document.querySelectorAll('.calendar-day.has-training').forEach(day => {
+                day.addEventListener('click', function() {
+                    console.log('Training scheduled on day:', this.textContent.trim());
+                    // Show training details
+                });
+            });
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update training progress and certifications
+            console.log('Updating training data...');
+        }, 30000);
+    </script>
+</body>
+</html>

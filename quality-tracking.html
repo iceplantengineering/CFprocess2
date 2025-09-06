@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Tracking & Analysis - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .quality-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .quality-card {
+            background: white;
+            padding: var(--space-5);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quality-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .quality-card.excellent::before { background: linear-gradient(90deg, var(--success), var(--success-light)); }
+        .quality-card.good::before { background: linear-gradient(90deg, var(--info), var(--info-light)); }
+        .quality-card.warning::before { background: linear-gradient(90deg, var(--warning), var(--warning-light)); }
+        .quality-card.poor::before { background: linear-gradient(90deg, var(--error), var(--error-light)); }
+
+        .quality-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .quality-title {
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .quality-score {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: var(--space-4) 0;
+        }
+
+        .score-excellent { color: var(--success); }
+        .score-good { color: var(--info); }
+        .score-warning { color: var(--warning); }
+        .score-poor { color: var(--error); }
+
+        .quality-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            font-size: 0.9rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .specification-table {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+            overflow: hidden;
+        }
+
+        .spec-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: white;
+            padding: var(--space-5);
+        }
+
+        .spec-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .spec-filters {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .spec-table th {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .spec-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .spec-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .spec-status {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pass {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-marginal {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-fail {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .trend-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-panel {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .time-selector {
+            padding: var(--space-1) var(--space-3);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .time-selector.active {
+            background: var(--secondary-purple);
+            color: white;
+            border-color: var(--secondary-purple);
+        }
+
+        .defect-analysis {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .defect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .defect-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            border-left: 4px solid var(--error);
+        }
+
+        .defect-type {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-3);
+        }
+
+        .defect-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .defect-stat {
+            text-align: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-md);
+        }
+
+        .defect-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--error);
+            margin-bottom: var(--space-1);
+        }
+
+        .defect-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .defect-causes {
+            background: white;
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-3);
+        }
+
+        .cause-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .cause-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        .cause-item:last-child {
+            border-bottom: none;
+        }
+
+        .cause-percentage {
+            font-weight: 600;
+            color: var(--error);
+        }
+
+        .spc-charts {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .spc-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: var(--space-5);
+        }
+
+        .spc-tab {
+            padding: var(--space-3) var(--space-6);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .spc-tab.active {
+            border-bottom-color: var(--secondary-purple);
+            color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .spc-content {
+            display: none;
+        }
+
+        .spc-content.active {
+            display: block;
+        }
+
+        .control-limits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .limit-card {
+            background: var(--gray-50);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .limit-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .limit-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .alerts-panel {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+            border-left: 5px solid var(--warning);
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+        }
+
+        .alert-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .quality-alert {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-severity {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .severity-critical { background: var(--error); }
+        .severity-major { background: var(--warning); }
+        .severity-minor { background: var(--info); }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-description {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .batch-comparison {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-5);
+        }
+
+        .batch-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .batch-item:hover {
+            border-color: var(--secondary-purple);
+            transform: translateY(-2px);
+        }
+
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .batch-id {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .batch-grade {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .grade-a { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .grade-b { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .grade-c { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+
+        .batch-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-2);
+        }
+
+        .batch-metric {
+            text-align: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-md);
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item active">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-award"></i>
+                Quality Tracking & Analysis
+            </h1>
+            <div class="breadcrumb">Dashboard / Quality Tracking</div>
+        </div>
+
+        <!-- Quality Overview -->
+        <div class="quality-overview">
+            <div class="quality-card excellent">
+                <div class="quality-header">
+                    <div class="quality-title">Tensile Strength</div>
+                    <i class="fas fa-dumbbell" style="color: var(--success); font-size: 1.5rem;"></i>
+                </div>
+                <div class="quality-score score-excellent">4.2 GPa</div>
+                <div class="quality-details">
+                    <div class="detail-row">
+                        <span>Target:</span>
+                        <span>4.0 GPa</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Tolerance:</span>
+                        <span>±0.3 GPa</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Current:</span>
+                        <span style="color: var(--success); font-weight: 600;">PASS</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Trend:</span>
+                        <span style="color: var(--success);">↗ +2.1%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quality-card good">
+                <div class="quality-header">
+                    <div class="quality-title">Elastic Modulus</div>
+                    <i class="fas fa-expand-arrows-alt" style="color: var(--info); font-size: 1.5rem;"></i>
+                </div>
+                <div class="quality-score score-good">238 GPa</div>
+                <div class="quality-details">
+                    <div class="detail-row">
+                        <span>Target:</span>
+                        <span>240 GPa</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Tolerance:</span>
+                        <span>±15 GPa</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Current:</span>
+                        <span style="color: var(--info); font-weight: 600;">PASS</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Trend:</span>
+                        <span style="color: var(--error);">↘ -0.8%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quality-card warning">
+                <div class="quality-header">
+                    <div class="quality-title">Diameter Variation</div>
+                    <i class="fas fa-circle" style="color: var(--warning); font-size: 1.5rem;"></i>
+                </div>
+                <div class="quality-score score-warning">±0.8 μm</div>
+                <div class="quality-details">
+                    <div class="detail-row">
+                        <span>Target:</span>
+                        <span>7.0 μm</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Tolerance:</span>
+                        <span>±0.5 μm</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Current:</span>
+                        <span style="color: var(--warning); font-weight: 600;">MARGINAL</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Trend:</span>
+                        <span style="color: var(--error);">↗ +15%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quality-card excellent">
+                <div class="quality-header">
+                    <div class="quality-title">Surface Quality</div>
+                    <i class="fas fa-microscope" style="color: var(--success); font-size: 1.5rem;"></i>
+                </div>
+                <div class="quality-score score-excellent">A+</div>
+                <div class="quality-details">
+                    <div class="detail-row">
+                        <span>Defects:</span>
+                        <span>0.02%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Smoothness:</span>
+                        <span>98.5%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Current:</span>
+                        <span style="color: var(--success); font-weight: 600;">EXCELLENT</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Trend:</span>
+                        <span style="color: var(--success);">↗ +1.2%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specification Compliance Table -->
+        <div class="specification-table">
+            <div class="spec-header">
+                <div class="spec-controls">
+                    <h3 style="margin: 0;">
+                        <i class="fas fa-clipboard-check"></i> Specification Compliance
+                    </h3>
+                    <div class="spec-filters">
+                        <select class="form-input" style="color: white; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3);">
+                            <option>Last 24 Hours</option>
+                            <option>Last Week</option>
+                            <option>Last Month</option>
+                        </select>
+                        <select class="form-input" style="color: white; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3);">
+                            <option>All Products</option>
+                            <option>T300</option>
+                            <option>T700</option>
+                            <option>T800</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container" style="border-radius: 0;">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Target Value</th>
+                            <th>Current Value</th>
+                            <th>Tolerance</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Tensile Strength</strong></td>
+                            <td>4.0 GPa</td>
+                            <td>4.2 GPa</td>
+                            <td>±0.3 GPa</td>
+                            <td><span class="spec-status status-pass">PASS</span></td>
+                            <td>2 min ago</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Elastic Modulus</strong></td>
+                            <td>240 GPa</td>
+                            <td>238 GPa</td>
+                            <td>±15 GPa</td>
+                            <td><span class="spec-status status-pass">PASS</span></td>
+                            <td>5 min ago</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diameter</strong></td>
+                            <td>7.0 μm</td>
+                            <td>7.8 μm</td>
+                            <td>±0.5 μm</td>
+                            <td><span class="spec-status status-marginal">MARGINAL</span></td>
+                            <td>1 min ago</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Density</strong></td>
+                            <td>1.78 g/cm³</td>
+                            <td>1.79 g/cm³</td>
+                            <td>±0.05 g/cm³</td>
+                            <td><span class="spec-status status-pass">PASS</span></td>
+                            <td>3 min ago</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Carbon Content</strong></td>
+                            <td>95.0%</td>
+                            <td>94.2%</td>
+                            <td>±1.5%</td>
+                            <td><span class="spec-status status-pass">PASS</span></td>
+                            <td>8 min ago</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Surface Roughness</strong></td>
+                            <td>≤0.5 μm</td>
+                            <td>0.3 μm</td>
+                            <td>N/A</td>
+                            <td><span class="spec-status status-pass">PASS</span></td>
+                            <td>6 min ago</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Trend Charts -->
+        <div class="trend-charts">
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <div class="chart-title">Quality Trends - Tensile Strength</div>
+                    <div class="chart-controls">
+                        <button class="time-selector active">1H</button>
+                        <button class="time-selector">8H</button>
+                        <button class="time-selector">24H</button>
+                        <button class="time-selector">7D</button>
+                    </div>
+                </div>
+                <div class="chart-container chart-small">
+                    <canvas id="tensileChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <div class="chart-title">Quality Trends - Elastic Modulus</div>
+                    <div class="chart-controls">
+                        <button class="time-selector active">1H</button>
+                        <button class="time-selector">8H</button>
+                        <button class="time-selector">24H</button>
+                        <button class="time-selector">7D</button>
+                    </div>
+                </div>
+                <div class="chart-container chart-small">
+                    <canvas id="modulusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPC Charts -->
+        <div class="spc-charts">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-chart-line"></i> Statistical Process Control
+            </h3>
+            
+            <div class="spc-tabs">
+                <div class="spc-tab active" onclick="switchSPCTab(0)">X̄-R Chart</div>
+                <div class="spc-tab" onclick="switchSPCTab(1)">Individual Chart</div>
+                <div class="spc-tab" onclick="switchSPCTab(2)">Capability Study</div>
+            </div>
+
+            <div class="spc-content active" id="spc-0">
+                <div class="control-limits">
+                    <div class="limit-card">
+                        <div class="limit-value">4.5</div>
+                        <div class="limit-label">Upper Control Limit (UCL)</div>
+                    </div>
+                    <div class="limit-card">
+                        <div class="limit-value">4.0</div>
+                        <div class="limit-label">Center Line (CL)</div>
+                    </div>
+                    <div class="limit-card">
+                        <div class="limit-value">3.5</div>
+                        <div class="limit-label">Lower Control Limit (LCL)</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="spcChart"></canvas>
+                </div>
+            </div>
+
+            <div class="spc-content" id="spc-1">
+                <div class="chart-container">
+                    <canvas id="individualChart"></canvas>
+                </div>
+            </div>
+
+            <div class="spc-content" id="spc-2">
+                <div class="control-limits">
+                    <div class="limit-card">
+                        <div class="limit-value">1.67</div>
+                        <div class="limit-label">Cpk Index</div>
+                    </div>
+                    <div class="limit-card">
+                        <div class="limit-value">1.85</div>
+                        <div class="limit-label">Cp Index</div>
+                    </div>
+                    <div class="limit-card">
+                        <div class="limit-value">99.9%</div>
+                        <div class="limit-label">Process Capability</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="capabilityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Defect Analysis -->
+        <div class="defect-analysis">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-bug"></i> Defect Analysis
+            </h3>
+            <div class="defect-grid">
+                <div class="defect-card">
+                    <div class="defect-type">Diameter Variation</div>
+                    <div class="defect-stats">
+                        <div class="defect-stat">
+                            <div class="defect-value">12</div>
+                            <div class="defect-label">Occurrences</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">0.8%</div>
+                            <div class="defect-label">Rate</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">↗ 15%</div>
+                            <div class="defect-label">Trend</div>
+                        </div>
+                    </div>
+                    <div class="defect-causes">
+                        <strong style="font-size: 0.9rem; margin-bottom: var(--space-2); display: block;">Root Causes:</strong>
+                        <ul class="cause-list">
+                            <li class="cause-item">
+                                <span>Spinning speed variation</span>
+                                <span class="cause-percentage">45%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Temperature fluctuation</span>
+                                <span class="cause-percentage">35%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Material inconsistency</span>
+                                <span class="cause-percentage">20%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="defect-card">
+                    <div class="defect-type">Surface Defects</div>
+                    <div class="defect-stats">
+                        <div class="defect-stat">
+                            <div class="defect-value">3</div>
+                            <div class="defect-label">Occurrences</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">0.02%</div>
+                            <div class="defect-label">Rate</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">↘ 25%</div>
+                            <div class="defect-label">Trend</div>
+                        </div>
+                    </div>
+                    <div class="defect-causes">
+                        <strong style="font-size: 0.9rem; margin-bottom: var(--space-2); display: block;">Root Causes:</strong>
+                        <ul class="cause-list">
+                            <li class="cause-item">
+                                <span>Contamination</span>
+                                <span class="cause-percentage">60%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Equipment wear</span>
+                                <span class="cause-percentage">25%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Process instability</span>
+                                <span class="cause-percentage">15%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="defect-card">
+                    <div class="defect-type">Strength Deviation</div>
+                    <div class="defect-stats">
+                        <div class="defect-stat">
+                            <div class="defect-value">7</div>
+                            <div class="defect-label">Occurrences</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">0.5%</div>
+                            <div class="defect-label">Rate</div>
+                        </div>
+                        <div class="defect-stat">
+                            <div class="defect-value">↘ 10%</div>
+                            <div class="defect-label">Trend</div>
+                        </div>
+                    </div>
+                    <div class="defect-causes">
+                        <strong style="font-size: 0.9rem; margin-bottom: var(--space-2); display: block;">Root Causes:</strong>
+                        <ul class="cause-list">
+                            <li class="cause-item">
+                                <span>Carbonization temperature</span>
+                                <span class="cause-percentage">50%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Residence time</span>
+                                <span class="cause-percentage">30%</span>
+                            </li>
+                            <li class="cause-item">
+                                <span>Raw material quality</span>
+                                <span class="cause-percentage">20%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Comparison -->
+        <div class="batch-comparison">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-balance-scale"></i> Batch Quality Comparison
+            </h3>
+            <div class="comparison-grid">
+                <div class="batch-item">
+                    <div class="batch-header">
+                        <div class="batch-id">LOT-T700-240905-001</div>
+                        <div class="batch-grade grade-a">A+</div>
+                    </div>
+                    <div class="batch-metrics">
+                        <div class="batch-metric">
+                            <div class="metric-value">4.2</div>
+                            <div class="metric-label">Tensile (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">238</div>
+                            <div class="metric-label">Modulus (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">7.1</div>
+                            <div class="metric-label">Diameter (μm)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">98.5%</div>
+                            <div class="metric-label">Yield</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="batch-item">
+                    <div class="batch-header">
+                        <div class="batch-id">LOT-T800-240906-002</div>
+                        <div class="batch-grade grade-b">B+</div>
+                    </div>
+                    <div class="batch-metrics">
+                        <div class="batch-metric">
+                            <div class="metric-value">3.8</div>
+                            <div class="metric-label">Tensile (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">225</div>
+                            <div class="metric-label">Modulus (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">7.3</div>
+                            <div class="metric-label">Diameter (μm)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">94.2%</div>
+                            <div class="metric-label">Yield</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="batch-item">
+                    <div class="batch-header">
+                        <div class="batch-id">LOT-M40J-240904-003</div>
+                        <div class="batch-grade grade-a">A</div>
+                    </div>
+                    <div class="batch-metrics">
+                        <div class="batch-metric">
+                            <div class="metric-value">4.0</div>
+                            <div class="metric-label">Tensile (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">245</div>
+                            <div class="metric-label">Modulus (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">6.9</div>
+                            <div class="metric-label">Diameter (μm)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">96.8%</div>
+                            <div class="metric-label">Yield</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="batch-item">
+                    <div class="batch-header">
+                        <div class="batch-id">LOT-T300-240903-004</div>
+                        <div class="batch-grade grade-c">C+</div>
+                    </div>
+                    <div class="batch-metrics">
+                        <div class="batch-metric">
+                            <div class="metric-value">3.4</div>
+                            <div class="metric-label">Tensile (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">198</div>
+                            <div class="metric-label">Modulus (GPa)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">8.2</div>
+                            <div class="metric-label">Diameter (μm)</div>
+                        </div>
+                        <div class="batch-metric">
+                            <div class="metric-value">89.1%</div>
+                            <div class="metric-label">Yield</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Alerts -->
+        <div class="alerts-panel">
+            <h3 style="margin-bottom: var(--space-4); color: var(--warning);">
+                <i class="fas fa-exclamation-triangle"></i> Quality Alerts & Notifications
+            </h3>
+            <div class="alert-items">
+                <div class="quality-alert">
+                    <div class="alert-severity severity-major">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Diameter Variation Trending High</div>
+                        <div class="alert-description">Current batch showing ±0.8μm variation, approaching upper tolerance limit. Recommend process adjustment.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">15 min ago</div>
+                </div>
+
+                <div class="quality-alert">
+                    <div class="alert-severity severity-critical">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">SPC Rule Violation - Tensile Strength</div>
+                        <div class="alert-description">Seven consecutive points trending downward detected. Investigate process stability.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">45 min ago</div>
+                </div>
+
+                <div class="quality-alert">
+                    <div class="alert-severity severity-minor">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Quality Inspection Scheduled</div>
+                        <div class="alert-description">Routine quality inspection for LOT-T800-240906-002 scheduled at 16:00 today.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">2 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSPCTab = 0;
+
+        // Switch SPC tabs
+        function switchSPCTab(tabIndex) {
+            document.querySelectorAll('.spc-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.spc-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelectorAll('.spc-tab')[tabIndex].classList.add('active');
+            document.getElementById(`spc-${tabIndex}`).classList.add('active');
+            
+            currentSPCTab = tabIndex;
+        }
+
+        // Initialize charts
+        function initQualityCharts() {
+            // Tensile Strength Chart
+            const tensileCtx = document.getElementById('tensileChart').getContext('2d');
+            new Chart(tensileCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'Tensile Strength (GPa)',
+                        data: [4.1, 4.0, 4.2, 4.1, 4.3, 4.2],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, min: 3.5, max: 4.5 }
+                    }
+                }
+            });
+
+            // Elastic Modulus Chart
+            const modulusCtx = document.getElementById('modulusChart').getContext('2d');
+            new Chart(modulusCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'Elastic Modulus (GPa)',
+                        data: [242, 240, 238, 235, 236, 238],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, min: 220, max: 250 }
+                    }
+                }
+            });
+
+            // SPC Chart
+            const spcCtx = document.getElementById('spcChart').getContext('2d');
+            new Chart(spcCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Sample Mean',
+                        data: [4.1, 4.0, 4.2, 4.1, 3.9, 4.0, 4.3, 4.2, 4.1, 4.0, 4.2, 4.1, 4.0, 3.9, 4.1, 4.2, 4.0, 4.1, 4.2, 4.0],
+                        borderColor: '#1e3c72',
+                        backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                        tension: 0
+                    }, {
+                        label: 'UCL',
+                        data: Array(20).fill(4.5),
+                        borderColor: '#dc2626',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }, {
+                        label: 'CL',
+                        data: Array(20).fill(4.0),
+                        borderColor: '#10b981',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }, {
+                        label: 'LCL',
+                        data: Array(20).fill(3.5),
+                        borderColor: '#dc2626',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 3.0, max: 5.0 }
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initQualityCharts();
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update quality values
+            console.log('Updating quality metrics...');
+        }, 30000);
+    </script>
+</body>
+</html>

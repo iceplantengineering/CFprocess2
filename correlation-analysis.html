@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Correlation Analysis - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .correlation-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .correlation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .correlation-strong::before { background: linear-gradient(90deg, var(--success), var(--success-light)); }
+        .correlation-moderate::before { background: linear-gradient(90deg, var(--warning), var(--warning-light)); }
+        .correlation-weak::before { background: linear-gradient(90deg, var(--info), var(--info-light)); }
+        .correlation-negative::before { background: linear-gradient(90deg, var(--error), var(--error-light)); }
+
+        .correlation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .correlation-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .correlation-coefficient {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+        }
+
+        .coeff-strong { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .coeff-moderate { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .coeff-weak { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .coeff-negative { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+
+        .correlation-details {
+            margin-top: var(--space-4);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--gray-600);
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .scatter-plot-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .plot-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+            flex-wrap: wrap;
+            gap: var(--space-3);
+        }
+
+        .variable-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .selector-group {
+            display: flex;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+        }
+
+        .heatmap-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            margin-top: var(--space-5);
+            background: var(--gray-200);
+            padding: var(--space-3);
+            border-radius: var(--radius-lg);
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        .heatmap-header {
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+        }
+
+        .correlation-1-0 { background: #065f46; }
+        .correlation-0-8 { background: #047857; }
+        .correlation-0-6 { background: #059669; }
+        .correlation-0-4 { background: #10b981; }
+        .correlation-0-2 { background: #34d399; }
+        .correlation-0-0 { background: var(--gray-400); }
+        .correlation-n-0-2 { background: #f87171; }
+        .correlation-n-0-4 { background: #ef4444; }
+        .correlation-n-0-6 { background: #dc2626; }
+        .correlation-n-0-8 { background: #b91c1c; }
+
+        .heatmap-legend {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        .insights-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .insight-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            border-left: 4px solid var(--info);
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .insight-description {
+            color: var(--gray-700);
+            margin-bottom: var(--space-3);
+            line-height: 1.5;
+        }
+
+        .insight-impact {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .impact-high { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+        .impact-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .impact-low { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        .regression-analysis {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .regression-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: var(--space-5);
+        }
+
+        .regression-tab {
+            padding: var(--space-3) var(--space-6);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .regression-tab.active {
+            border-bottom-color: var(--secondary-purple);
+            color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .regression-content {
+            display: none;
+        }
+
+        .regression-content.active {
+            display: block;
+        }
+
+        .model-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        .stat-card {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .predictive-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--secondary-purple);
+        }
+
+        .prediction-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .prediction-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .prediction-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .confidence-score {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .confidence-high { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .confidence-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .confidence-low { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+
+        .prediction-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-purple);
+            text-align: center;
+            margin: var(--space-4) 0;
+        }
+
+        .prediction-factors {
+            background: var(--gray-50);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-3);
+        }
+
+        .factor-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .factor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        .factor-item:last-child {
+            border-bottom: none;
+        }
+
+        .factor-impact {
+            font-weight: 600;
+        }
+
+        .impact-positive { color: var(--success); }
+        .impact-negative { color: var(--error); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item active">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-scatter"></i>
+                Correlation Analysis & Predictive Analytics
+            </h1>
+            <div class="breadcrumb">Dashboard / Correlation Analysis</div>
+        </div>
+
+        <!-- Correlation Overview Cards -->
+        <div class="analysis-grid">
+            <div class="correlation-card correlation-strong">
+                <div class="correlation-header">
+                    <div class="correlation-title">Machine Efficiency vs Quality</div>
+                    <div class="correlation-coefficient coeff-strong">0.87</div>
+                </div>
+                <div class="correlation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Relationship:</span>
+                        <span class="detail-value">Strong Positive</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">P-value:</span>
+                        <span class="detail-value">< 0.001</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Sample Size:</span>
+                        <span class="detail-value">1,247 batches</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confidence:</span>
+                        <span class="detail-value">99.9%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="correlation-card correlation-negative">
+                <div class="correlation-header">
+                    <div class="correlation-title">Temperature vs Defect Rate</div>
+                    <div class="correlation-coefficient coeff-negative">-0.72</div>
+                </div>
+                <div class="correlation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Relationship:</span>
+                        <span class="detail-value">Strong Negative</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">P-value:</span>
+                        <span class="detail-value">< 0.001</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Sample Size:</span>
+                        <span class="detail-value">892 samples</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confidence:</span>
+                        <span class="detail-value">99.5%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="correlation-card correlation-moderate">
+                <div class="correlation-header">
+                    <div class="correlation-title">Energy Usage vs Production</div>
+                    <div class="correlation-coefficient coeff-moderate">0.65</div>
+                </div>
+                <div class="correlation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Relationship:</span>
+                        <span class="detail-value">Moderate Positive</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">P-value:</span>
+                        <span class="detail-value">< 0.01</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Sample Size:</span>
+                        <span class="detail-value">654 measurements</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confidence:</span>
+                        <span class="detail-value">95.2%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="correlation-card correlation-weak">
+                <div class="correlation-header">
+                    <div class="correlation-title">Operator Experience vs Output</div>
+                    <div class="correlation-coefficient coeff-weak">0.42</div>
+                </div>
+                <div class="correlation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Relationship:</span>
+                        <span class="detail-value">Moderate Positive</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">P-value:</span>
+                        <span class="detail-value">< 0.05</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Sample Size:</span>
+                        <span class="detail-value">328 shifts</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confidence:</span>
+                        <span class="detail-value">92.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scatter Plot Analysis -->
+        <div class="scatter-plot-section">
+            <div class="plot-controls">
+                <h3 style="color: var(--primary-blue); margin: 0;">
+                    <i class="fas fa-chart-scatter"></i> Scatter Plot Analysis
+                </h3>
+                <div class="selector-group">
+                    <div class="variable-selector">
+                        <label><strong>X-Axis:</strong></label>
+                        <select class="form-input" id="xAxisSelect">
+                            <option value="efficiency">Machine Efficiency (%)</option>
+                            <option value="temperature">Temperature (°C)</option>
+                            <option value="energy">Energy Usage (kWh)</option>
+                            <option value="experience">Operator Experience (years)</option>
+                        </select>
+                    </div>
+                    <div class="variable-selector">
+                        <label><strong>Y-Axis:</strong></label>
+                        <select class="form-input" id="yAxisSelect">
+                            <option value="quality">Quality Score</option>
+                            <option value="defects">Defect Rate (%)</option>
+                            <option value="production">Production Rate (kg/hr)</option>
+                            <option value="yield">Process Yield (%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Correlation Heatmap -->
+        <div class="heatmap-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-th"></i> Correlation Matrix Heatmap
+            </h3>
+            <div class="heatmap-grid">
+                <div class="heatmap-cell heatmap-header"></div>
+                <div class="heatmap-cell heatmap-header">Quality</div>
+                <div class="heatmap-cell heatmap-header">Energy</div>
+                <div class="heatmap-cell heatmap-header">Temp</div>
+                <div class="heatmap-cell heatmap-header">Operator</div>
+                <div class="heatmap-cell heatmap-header">Machine</div>
+
+                <div class="heatmap-cell heatmap-header">Quality</div>
+                <div class="heatmap-cell correlation-1-0">1.0</div>
+                <div class="heatmap-cell correlation-0-6">0.65</div>
+                <div class="heatmap-cell correlation-n-0-4">-0.38</div>
+                <div class="heatmap-cell correlation-0-4">0.42</div>
+                <div class="heatmap-cell correlation-0-8">0.87</div>
+
+                <div class="heatmap-cell heatmap-header">Energy</div>
+                <div class="heatmap-cell correlation-0-6">0.65</div>
+                <div class="heatmap-cell correlation-1-0">1.0</div>
+                <div class="heatmap-cell correlation-0-4">0.45</div>
+                <div class="heatmap-cell correlation-0-2">0.23</div>
+                <div class="heatmap-cell correlation-0-6">0.71</div>
+
+                <div class="heatmap-cell heatmap-header">Temp</div>
+                <div class="heatmap-cell correlation-n-0-4">-0.38</div>
+                <div class="heatmap-cell correlation-0-4">0.45</div>
+                <div class="heatmap-cell correlation-1-0">1.0</div>
+                <div class="heatmap-cell correlation-n-0-2">-0.15</div>
+                <div class="heatmap-cell correlation-0-2">0.28</div>
+
+                <div class="heatmap-cell heatmap-header">Operator</div>
+                <div class="heatmap-cell correlation-0-4">0.42</div>
+                <div class="heatmap-cell correlation-0-2">0.23</div>
+                <div class="heatmap-cell correlation-n-0-2">-0.15</div>
+                <div class="heatmap-cell correlation-1-0">1.0</div>
+                <div class="heatmap-cell correlation-0-4">0.38</div>
+
+                <div class="heatmap-cell heatmap-header">Machine</div>
+                <div class="heatmap-cell correlation-0-8">0.87</div>
+                <div class="heatmap-cell correlation-0-6">0.71</div>
+                <div class="heatmap-cell correlation-0-2">0.28</div>
+                <div class="heatmap-cell correlation-0-4">0.38</div>
+                <div class="heatmap-cell correlation-1-0">1.0</div>
+            </div>
+            <div class="heatmap-legend">
+                <div class="legend-item">
+                    <div class="legend-color correlation-1-0"></div>
+                    <span>1.0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-0-8"></div>
+                    <span>0.8</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-0-6"></div>
+                    <span>0.6</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-0-4"></div>
+                    <span>0.4</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-0-0"></div>
+                    <span>0.0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-n-0-4"></div>
+                    <span>-0.4</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color correlation-n-0-8"></div>
+                    <span>-0.8</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="insights-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-lightbulb"></i> Key Analytical Insights
+            </h3>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-title">
+                        <i class="fas fa-cogs"></i>
+                        Machine-Quality Optimization
+                    </div>
+                    <div class="insight-description">
+                        Strong correlation (r=0.87) between machine efficiency and product quality suggests that maintaining optimal machine performance directly impacts output quality. Focus on preventive maintenance schedules.
+                    </div>
+                    <div class="insight-impact impact-high">High Impact</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-title">
+                        <i class="fas fa-thermometer-half"></i>
+                        Temperature Control Critical
+                    </div>
+                    <div class="insight-description">
+                        Negative correlation (r=-0.72) between stabilization temperature and defect rate indicates temperature control is crucial. Each 5°C deviation increases defects by ~3.2%.
+                    </div>
+                    <div class="insight-impact impact-high">High Impact</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-title">
+                        <i class="fas fa-bolt"></i>
+                        Energy Efficiency Opportunity
+                    </div>
+                    <div class="insight-description">
+                        Moderate correlation (r=0.65) between energy usage and production rate shows potential for optimization. 10% energy reduction possible without compromising output.
+                    </div>
+                    <div class="insight-impact impact-medium">Medium Impact</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Operator Training ROI
+                    </div>
+                    <div class="insight-description">
+                        Positive correlation (r=0.42) between operator experience and output quality validates training investments. Each year of experience improves quality by 2.1%.
+                    </div>
+                    <div class="insight-impact impact-medium">Medium Impact</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regression Analysis -->
+        <div class="regression-analysis">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-chart-line"></i> Regression Analysis
+            </h3>
+            
+            <div class="regression-tabs">
+                <div class="regression-tab active" onclick="switchRegressionTab(0)">Linear Regression</div>
+                <div class="regression-tab" onclick="switchRegressionTab(1)">Multiple Regression</div>
+                <div class="regression-tab" onclick="switchRegressionTab(2)">Polynomial Fit</div>
+            </div>
+
+            <div class="regression-content active" id="regression-0">
+                <div class="model-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">0.876</div>
+                        <div class="stat-label">R² Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0.932</div>
+                        <div class="stat-label">R Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2.34</div>
+                        <div class="stat-label">RMSE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">< 0.001</div>
+                        <div class="stat-label">P-value</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="regressionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="regression-content" id="regression-1">
+                <div class="model-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">0.923</div>
+                        <div class="stat-label">Adjusted R²</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">145.7</div>
+                        <div class="stat-label">F-Statistic</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1.89</div>
+                        <div class="stat-label">RMSE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2.12</div>
+                        <div class="stat-label">Durbin-Watson</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="multipleRegressionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="regression-content" id="regression-2">
+                <div class="model-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">0.891</div>
+                        <div class="stat-label">R² Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3rd</div>
+                        <div class="stat-label">Polynomial Degree</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2.67</div>
+                        <div class="stat-label">RMSE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">124.5</div>
+                        <div class="stat-label">AIC Score</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="polynomialChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictive Analytics -->
+        <div class="predictive-section">
+            <h3 style="color: var(--secondary-purple); margin-bottom: var(--space-4);">
+                <i class="fas fa-crystal-ball"></i> Predictive Analytics & Forecasting
+            </h3>
+            <div class="prediction-cards">
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Next Batch Quality Prediction</div>
+                        <div class="confidence-score confidence-high">95% Confidence</div>
+                    </div>
+                    <div class="prediction-value">Grade A+</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Expected Quality Score: 4.2 ± 0.1
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Key Influencing Factors:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Machine Efficiency: 96.2%</span>
+                                <span class="factor-impact impact-positive">+12%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Temperature Control: Stable</span>
+                                <span class="factor-impact impact-positive">+8%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Operator Experience: 5.2 years</span>
+                                <span class="factor-impact impact-positive">+5%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Defect Rate Forecast</div>
+                        <div class="confidence-score confidence-medium">87% Confidence</div>
+                    </div>
+                    <div class="prediction-value">0.3%</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Expected Range: 0.1% - 0.5%
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Risk Factors:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Temperature Variation: ±3°C</span>
+                                <span class="factor-impact impact-negative">+0.2%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Material Quality: Grade A</span>
+                                <span class="factor-impact impact-positive">-0.1%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Machine Condition: Good</span>
+                                <span class="factor-impact impact-positive">-0.1%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Production Output Estimate</div>
+                        <div class="confidence-score confidence-high">92% Confidence</div>
+                    </div>
+                    <div class="prediction-value">147 kg/hr</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Range: 142 - 152 kg/hr
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Contributing Factors:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Energy Efficiency: Optimal</span>
+                                <span class="factor-impact impact-positive">+8 kg/hr</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Process Stability: High</span>
+                                <span class="factor-impact impact-positive">+5 kg/hr</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Shift Staffing: Full</span>
+                                <span class="factor-impact impact-positive">+3 kg/hr</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRegressionTab = 0;
+
+        // Switch regression tabs
+        function switchRegressionTab(tabIndex) {
+            document.querySelectorAll('.regression-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.regression-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelectorAll('.regression-tab')[tabIndex].classList.add('active');
+            document.getElementById(`regression-${tabIndex}`).classList.add('active');
+            
+            currentRegressionTab = tabIndex;
+        }
+
+        // Generate scatter plot data
+        function generateScatterData(xVar, yVar) {
+            const data = [];
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * 100;
+                const y = x * 0.8 + Math.random() * 20 + (xVar === 'temperature' ? -0.5 * x : 0);
+                data.push({ x, y });
+            }
+            return data;
+        }
+
+        // Initialize charts
+        function initAnalysisCharts() {
+            // Scatter Plot
+            const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+            new Chart(scatterCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points',
+                        data: generateScatterData('efficiency', 'quality'),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea',
+                        pointRadius: 4
+                    }, {
+                        label: 'Trend Line',
+                        data: [
+                            { x: 0, y: 10 },
+                            { x: 100, y: 90 }
+                        ],
+                        type: 'line',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Machine Efficiency (%)' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Quality Score' }
+                        }
+                    }
+                }
+            });
+
+            // Regression Chart
+            const regressionCtx = document.getElementById('regressionChart').getContext('2d');
+            new Chart(regressionCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 50}, (_, i) => i * 2),
+                    datasets: [{
+                        label: 'Actual Data',
+                        data: Array.from({length: 50}, (_, i) => i * 1.8 + Math.random() * 10),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0,
+                        pointRadius: 3
+                    }, {
+                        label: 'Regression Line',
+                        data: Array.from({length: 50}, (_, i) => i * 1.8),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // Update scatter plot based on selection
+        function updateScatterPlot() {
+            const xAxis = document.getElementById('xAxisSelect').value;
+            const yAxis = document.getElementById('yAxisSelect').value;
+            console.log(`Updating scatter plot: ${xAxis} vs ${yAxis}`);
+            // In a real application, this would update the chart data
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initAnalysisCharts();
+            
+            // Add event listeners for scatter plot selectors
+            document.getElementById('xAxisSelect').addEventListener('change', updateScatterPlot);
+            document.getElementById('yAxisSelect').addEventListener('change', updateScatterPlot);
+        });
+
+        // Simulate real-time correlation updates
+        setInterval(() => {
+            // Update correlation coefficients slightly
+            console.log('Updating correlation data...');
+        }, 60000);
+    </script>
+</body>
+</html>

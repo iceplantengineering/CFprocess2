@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operator Attendance - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .attendance-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .shift-overview {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .shift-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: var(--space-5);
+        }
+
+        .shift-tab {
+            padding: var(--space-3) var(--space-6);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .shift-tab.active {
+            border-bottom-color: var(--secondary-purple);
+            color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .shift-content {
+            display: none;
+        }
+
+        .shift-content.active {
+            display: block;
+        }
+
+        .operators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .operator-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            border-left: 4px solid var(--success);
+            transition: all 0.3s ease;
+        }
+
+        .operator-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .operator-card.absent {
+            border-left-color: var(--error);
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        .operator-card.late {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .operator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .operator-info h4 {
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+            font-size: 1.1rem;
+        }
+
+        .operator-id {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            font-family: var(--font-mono);
+        }
+
+        .operator-status {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-present {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-absent {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .status-late {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .operator-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            margin-top: var(--space-3);
+            font-size: 0.9rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-label {
+            color: var(--gray-600);
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .attendance-chart-container {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .schedule-board {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 120px repeat(7, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .schedule-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: var(--space-3);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .schedule-time {
+            background: var(--gray-100);
+            padding: var(--space-3);
+            font-weight: 600;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .schedule-cell {
+            background: white;
+            padding: var(--space-2);
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+            font-size: 0.8rem;
+        }
+
+        .operator-badge {
+            background: var(--secondary-purple);
+            color: white;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .operator-badge:hover {
+            background: var(--primary-blue);
+            transform: scale(1.05);
+        }
+
+        .operator-badge.absent {
+            background: var(--error);
+        }
+
+        .operator-badge.late {
+            background: var(--warning);
+        }
+
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-6);
+        }
+
+        .performance-card {
+            background: white;
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            border-top: 3px solid var(--info);
+        }
+
+        .performance-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .performance-label {
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+
+        .performance-trend {
+            font-size: 0.8rem;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+
+        .trend-up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .trend-down {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .alert-panel {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--warning);
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .alert-urgent { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .alert-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        .filter-controls {
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-6);
+            display: flex;
+            gap: var(--space-4);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-picker {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .quick-actions {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--gray-800);
+        }
+
+        .action-btn:hover {
+            border-color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .icon-attendance { background: var(--success); }
+        .icon-schedule { background: var(--info); }
+        .icon-report { background: var(--warning); }
+        .icon-overtime { background: var(--error); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item active">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-users"></i>
+                Operator Attendance
+            </h1>
+            <div class="breadcrumb">Dashboard / Operator Attendance</div>
+        </div>
+
+        <!-- Attendance Summary -->
+        <div class="attendance-summary">
+            <div class="summary-card">
+                <div class="summary-icon icon-attendance">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="summary-value">28/32</div>
+                <div class="summary-label">Present Today</div>
+                <div class="summary-change change-positive">
+                    <i class="fas fa-arrow-up"></i> +2 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon" style="background: var(--error);">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="summary-value">4</div>
+                <div class="summary-label">Absent Today</div>
+                <div class="summary-change change-negative">
+                    <i class="fas fa-arrow-up"></i> +1 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon" style="background: var(--warning);">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="summary-value">3</div>
+                <div class="summary-label">Late Arrivals</div>
+                <div class="summary-change change-positive">
+                    <i class="fas fa-arrow-down"></i> -2 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon" style="background: var(--info);">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="summary-value">2</div>
+                <div class="summary-label">Overtime Active</div>
+                <div class="summary-change change-neutral">
+                    <i class="fas fa-minus"></i> Same as yesterday
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <div class="date-picker">
+                <label><strong>Date:</strong></label>
+                <input type="date" class="form-input" id="attendanceDate" style="width: auto;">
+            </div>
+            <div class="filter-group">
+                <label><strong>Department:</strong></label>
+                <select class="form-input" style="width: auto;">
+                    <option>All Departments</option>
+                    <option>Production</option>
+                    <option>Quality Control</option>
+                    <option>Maintenance</option>
+                    <option>Supervision</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><strong>Shift:</strong></label>
+                <select class="form-input" style="width: auto;">
+                    <option>All Shifts</option>
+                    <option>Day Shift (6AM-2PM)</option>
+                    <option>Evening Shift (2PM-10PM)</option>
+                    <option>Night Shift (10PM-6AM)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Shift Overview -->
+        <div class="shift-overview">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-clock"></i> Current Shift Status
+            </h3>
+            
+            <div class="shift-tabs">
+                <div class="shift-tab active" onclick="switchShift(0)">Day Shift (6AM-2PM)</div>
+                <div class="shift-tab" onclick="switchShift(1)">Evening Shift (2PM-10PM)</div>
+                <div class="shift-tab" onclick="switchShift(2)">Night Shift (10PM-6AM)</div>
+            </div>
+
+            <div class="shift-content active" id="shift-0">
+                <div class="operators-grid">
+                    <div class="operator-card">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>John Smith</h4>
+                                <div class="operator-id">OP-045</div>
+                            </div>
+                            <div class="operator-status status-present">Present</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Spinning Unit 1</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Check-in:</span>
+                                <span class="detail-value">05:58 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Break:</span>
+                                <span class="detail-value">10:00 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Efficiency:</span>
+                                <span class="detail-value">96.2%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="operator-card late">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>Sarah Johnson</h4>
+                                <div class="operator-id">OP-032</div>
+                            </div>
+                            <div class="operator-status status-late">Late (15 min)</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Stabilization</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Check-in:</span>
+                                <span class="detail-value">06:15 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Reason:</span>
+                                <span class="detail-value">Traffic</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Efficiency:</span>
+                                <span class="detail-value">91.8%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="operator-card">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>Michael Brown</h4>
+                                <div class="operator-id">OP-028</div>
+                            </div>
+                            <div class="operator-status status-present">Present</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Carbonization</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Check-in:</span>
+                                <span class="detail-value">05:55 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Break:</span>
+                                <span class="detail-value">Completed</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Efficiency:</span>
+                                <span class="detail-value">98.1%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="operator-card absent">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>Lisa Wilson</h4>
+                                <div class="operator-id">OP-019</div>
+                            </div>
+                            <div class="operator-status status-absent">Absent</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Surface Treatment</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Reason:</span>
+                                <span class="detail-value">Sick Leave</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Replacement:</span>
+                                <span class="detail-value">OP-067</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Return:</span>
+                                <span class="detail-value">Tomorrow</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="shift-content" id="shift-1">
+                <div class="operators-grid">
+                    <div class="operator-card">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>David Lee</h4>
+                                <div class="operator-id">OP-051</div>
+                            </div>
+                            <div class="operator-status status-present">Present</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Spinning Unit 2</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Check-in:</span>
+                                <span class="detail-value">01:57 PM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Break:</span>
+                                <span class="detail-value">06:00 PM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Efficiency:</span>
+                                <span class="detail-value">94.5%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- More evening shift operators would be here -->
+                </div>
+            </div>
+
+            <div class="shift-content" id="shift-2">
+                <div class="operators-grid">
+                    <div class="operator-card">
+                        <div class="operator-header">
+                            <div class="operator-info">
+                                <h4>Robert Taylor</h4>
+                                <div class="operator-id">OP-063</div>
+                            </div>
+                            <div class="operator-status status-present">Present</div>
+                        </div>
+                        <div class="operator-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Station:</span>
+                                <span class="detail-value">Maintenance</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Check-in:</span>
+                                <span class="detail-value">09:58 PM</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Task:</span>
+                                <span class="detail-value">Routine Inspection</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Progress:</span>
+                                <span class="detail-value">75%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- More night shift operators would be here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Chart -->
+        <div class="attendance-chart-container">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-chart-line"></i> Weekly Attendance Trends
+            </h3>
+            <div class="chart-container">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Weekly Schedule Board -->
+        <div class="schedule-board">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-calendar-week"></i> Weekly Schedule Overview
+            </h3>
+            <div class="schedule-grid">
+                <div class="schedule-header">Time</div>
+                <div class="schedule-header">Monday</div>
+                <div class="schedule-header">Tuesday</div>
+                <div class="schedule-header">Wednesday</div>
+                <div class="schedule-header">Thursday</div>
+                <div class="schedule-header">Friday</div>
+                <div class="schedule-header">Saturday</div>
+                <div class="schedule-header">Sunday</div>
+
+                <div class="schedule-time">6AM-2PM</div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">John S.</div>
+                    <div class="operator-badge">Sarah J.</div>
+                    <div class="operator-badge">Mike B.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">John S.</div>
+                    <div class="operator-badge late">Sarah J.</div>
+                    <div class="operator-badge">Mike B.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">John S.</div>
+                    <div class="operator-badge">Sarah J.</div>
+                    <div class="operator-badge">Mike B.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">John S.</div>
+                    <div class="operator-badge">Sarah J.</div>
+                    <div class="operator-badge">Mike B.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">John S.</div>
+                    <div class="operator-badge">Sarah J.</div>
+                    <div class="operator-badge">Mike B.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Tom K.</div>
+                    <div class="operator-badge">Amy L.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Tom K.</div>
+                    <div class="operator-badge">Amy L.</div>
+                </div>
+
+                <div class="schedule-time">2PM-10PM</div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">David L.</div>
+                    <div class="operator-badge">Emma W.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">David L.</div>
+                    <div class="operator-badge">Emma W.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">David L.</div>
+                    <div class="operator-badge absent">Emma W.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">David L.</div>
+                    <div class="operator-badge">Emma W.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">David L.</div>
+                    <div class="operator-badge">Emma W.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Chris M.</div>
+                    <div class="operator-badge">Nina P.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Chris M.</div>
+                    <div class="operator-badge">Nina P.</div>
+                </div>
+
+                <div class="schedule-time">10PM-6AM</div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Robert T.</div>
+                    <div class="operator-badge">Kevin H.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Robert T.</div>
+                    <div class="operator-badge">Kevin H.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Robert T.</div>
+                    <div class="operator-badge">Kevin H.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Robert T.</div>
+                    <div class="operator-badge">Kevin H.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Robert T.</div>
+                    <div class="operator-badge">Kevin H.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Alex R.</div>
+                </div>
+                <div class="schedule-cell">
+                    <div class="operator-badge">Alex R.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </h3>
+            <div class="action-buttons">
+                <a href="#" class="action-btn">
+                    <div class="action-icon icon-attendance">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div>
+                        <strong>Manual Check-in</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Record attendance manually</div>
+                    </div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon icon-schedule">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <strong>Schedule Manager</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Modify shift schedules</div>
+                    </div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon icon-report">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div>
+                        <strong>Generate Report</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Export attendance data</div>
+                    </div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon icon-overtime">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <strong>Overtime Approval</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Manage overtime requests</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="performance-metrics">
+            <div class="performance-card">
+                <div class="performance-value">94.2%</div>
+                <div class="performance-label">Overall Attendance Rate</div>
+                <div class="performance-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> +2.1% this month
+                </div>
+            </div>
+            <div class="performance-card">
+                <div class="performance-value">8.5</div>
+                <div class="performance-label">Average Hours/Day</div>
+                <div class="performance-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> +0.3 hrs this week
+                </div>
+            </div>
+            <div class="performance-card">
+                <div class="performance-value">12</div>
+                <div class="performance-label">Overtime Hours/Week</div>
+                <div class="performance-trend trend-down">
+                    <i class="fas fa-arrow-down"></i> -4 hrs from last week
+                </div>
+            </div>
+            <div class="performance-card">
+                <div class="performance-value">96.8%</div>
+                <div class="performance-label">On-Time Rate</div>
+                <div class="performance-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> +1.5% this month
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Panel -->
+        <div class="alert-panel">
+            <h3 style="margin-bottom: var(--space-4); color: var(--warning);">
+                <i class="fas fa-exclamation-triangle"></i> Attendance Alerts
+            </h3>
+            <div class="alert-list">
+                <div class="alert-item">
+                    <div class="alert-icon alert-urgent">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <div>
+                        <strong>Critical Staffing - Night Shift</strong><br>
+                        Only 2 operators scheduled for tonight. Minimum required: 3
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">30 min ago</div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-icon alert-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <strong>Sarah Johnson - Frequent Late Arrivals</strong><br>
+                        3 late arrivals this week. Consider scheduling discussion
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">2 hours ago</div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-icon alert-info">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <strong>Overtime Request - Michael Brown</strong><br>
+                        Requesting 4 hours overtime for equipment maintenance
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">4 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentShift = 0;
+
+        function switchShift(shiftIndex) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.shift-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.shift-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            document.querySelectorAll('.shift-tab')[shiftIndex].classList.add('active');
+            document.getElementById(`shift-${shiftIndex}`).classList.add('active');
+            
+            currentShift = shiftIndex;
+        }
+
+        // Initialize attendance chart
+        function initAttendanceChart() {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            const attendanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                    datasets: [{
+                        label: 'Present',
+                        data: [30, 28, 29, 31, 28, 22, 24],
+                        borderColor: var('--success'),
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Absent',
+                        data: [2, 4, 3, 1, 4, 2, 3],
+                        borderColor: var('--error'),
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Late',
+                        data: [1, 2, 1, 0, 3, 1, 1],
+                        borderColor: var('--warning'),
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set today's date as default
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            document.getElementById('attendanceDate').value = today.toISOString().split('T')[0];
+            initAttendanceChart();
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update attendance numbers occasionally
+            console.log('Updating attendance data...');
+        }, 60000); // Update every minute
+    </script>
+</body>
+</html>

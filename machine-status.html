@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Status Monitoring - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .machine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .machine-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .machine-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success) 0%, var(--success-light) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .machine-card.warning::before {
+            background: linear-gradient(90deg, var(--warning) 0%, var(--warning-light) 100%);
+        }
+
+        .machine-card.error::before {
+            background: linear-gradient(90deg, var(--error) 0%, var(--error-light) 100%);
+        }
+
+        .machine-card.stopped::before {
+            background: linear-gradient(90deg, var(--gray-400) 0%, var(--gray-500) 100%);
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .machine-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .machine-id {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            font-family: var(--font-mono);
+        }
+
+        .machine-status-badge {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-running {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .status-error {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .status-stopped {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gray-500);
+            border: 1px solid var(--gray-500);
+        }
+
+        .machine-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin: var(--space-4) 0;
+        }
+
+        .metric {
+            text-align: center;
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .machine-alerts {
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2);
+            margin: var(--space-2) 0;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+        }
+
+        .alert-critical {
+            background: rgba(220, 38, 38, 0.1);
+            border-left: 3px solid var(--error);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warning);
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--info);
+        }
+
+        .machine-controls {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-stop {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-maintenance {
+            background: var(--warning);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .machine-visual {
+            height: 120px;
+            background: var(--gray-100);
+            border-radius: var(--radius-lg);
+            margin: var(--space-4) 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .visual-running {
+            background: linear-gradient(45deg, #10b981 25%, transparent 25%), 
+                        linear-gradient(-45deg, #10b981 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #10b981 75%), 
+                        linear-gradient(-45deg, transparent 75%, #10b981 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            animation: machineRunning 2s linear infinite;
+        }
+
+        @keyframes machineRunning {
+            0% { background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+            100% { background-position: 20px 20px, 20px 30px, 30px 10px, 10px 20px; }
+        }
+
+        .performance-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .summary-card {
+            background: white;
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-purple);
+        }
+
+        .summary-icon {
+            font-size: 2.5rem;
+            color: var(--secondary-purple);
+            margin-bottom: var(--space-3);
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .summary-label {
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+
+        .summary-change {
+            font-size: 0.875rem;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+
+        .change-positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .change-negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .filter-bar {
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-6);
+            display: flex;
+            gap: var(--space-4);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item active">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-cogs"></i>
+                Machine Status Monitoring
+            </h1>
+            <div class="breadcrumb">Dashboard / Machine Status</div>
+        </div>
+
+        <!-- Performance Summary -->
+        <div class="performance-summary">
+            <div class="summary-card">
+                <div class="summary-icon"><i class="fas fa-play-circle"></i></div>
+                <div class="summary-value">12</div>
+                <div class="summary-label">Running Machines</div>
+                <div class="summary-change change-positive">
+                    <i class="fas fa-arrow-up"></i> +2 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="summary-value">2</div>
+                <div class="summary-label">Warning Status</div>
+                <div class="summary-change change-negative">
+                    <i class="fas fa-arrow-up"></i> +1 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon"><i class="fas fa-tools"></i></div>
+                <div class="summary-value">1</div>
+                <div class="summary-label">Under Maintenance</div>
+                <div class="summary-change change-positive">
+                    <i class="fas fa-arrow-down"></i> -1 from yesterday
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon"><i class="fas fa-clock"></i></div>
+                <div class="summary-value">94.2%</div>
+                <div class="summary-label">Overall Availability</div>
+                <div class="summary-change change-positive">
+                    <i class="fas fa-arrow-up"></i> +1.2% from yesterday
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label><strong>Process Stage:</strong></label>
+                <select class="filter-select" id="stageFilter">
+                    <option value="all">All Stages</option>
+                    <option value="spinning">Spinning</option>
+                    <option value="stabilization">Stabilization</option>
+                    <option value="carbonization">Carbonization</option>
+                    <option value="treatment">Surface Treatment</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><strong>Status:</strong></label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="running">Running</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-primary" onclick="refreshMachineStatus()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Machine Status Grid -->
+        <div class="machine-grid" id="machineGrid">
+            <!-- Machine cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Machine Details Modal would go here -->
+    </div>
+
+    <script>
+        // Machine data
+        const machines = [
+            {
+                id: 'SP-001',
+                name: 'Spinning Unit 1',
+                stage: 'spinning',
+                status: 'running',
+                temperature: 62,
+                pressure: 2.1,
+                speed: 450,
+                efficiency: 96.2,
+                alerts: [
+                    { type: 'info', message: 'Regular maintenance due in 5 days' }
+                ]
+            },
+            {
+                id: 'SP-002',
+                name: 'Spinning Unit 2',
+                stage: 'spinning',
+                status: 'warning',
+                temperature: 68,
+                pressure: 2.3,
+                speed: 420,
+                efficiency: 89.1,
+                alerts: [
+                    { type: 'warning', message: 'Temperature above optimal range' },
+                    { type: 'info', message: 'Check polymer solution viscosity' }
+                ]
+            },
+            {
+                id: 'ST-001',
+                name: 'Stabilization Furnace 1',
+                stage: 'stabilization',
+                status: 'running',
+                temperature: 248,
+                pressure: 1.0,
+                speed: 15,
+                efficiency: 94.8,
+                alerts: []
+            },
+            {
+                id: 'ST-002',
+                name: 'Stabilization Furnace 2',
+                stage: 'stabilization',
+                status: 'warning',
+                temperature: 255,
+                pressure: 1.0,
+                speed: 15,
+                efficiency: 91.2,
+                alerts: [
+                    { type: 'warning', message: 'Temperature 7°C above setpoint' }
+                ]
+            },
+            {
+                id: 'CB-001',
+                name: 'Carbonization Furnace 1',
+                stage: 'carbonization',
+                status: 'running',
+                temperature: 1350,
+                pressure: 0.8,
+                speed: 8,
+                efficiency: 97.1,
+                alerts: [
+                    { type: 'info', message: 'Nitrogen purity optimal' }
+                ]
+            },
+            {
+                id: 'CB-002',
+                name: 'Carbonization Furnace 2',
+                stage: 'carbonization',
+                status: 'maintenance',
+                temperature: 25,
+                pressure: 0,
+                speed: 0,
+                efficiency: 0,
+                alerts: [
+                    { type: 'info', message: 'Scheduled maintenance in progress' }
+                ]
+            },
+            {
+                id: 'ST-003',
+                name: 'Surface Treatment Line 1',
+                stage: 'treatment',
+                status: 'running',
+                temperature: 125,
+                pressure: 1.2,
+                speed: 200,
+                efficiency: 95.6,
+                alerts: []
+            },
+            {
+                id: 'ST-004',
+                name: 'Surface Treatment Line 2',
+                stage: 'treatment',
+                status: 'error',
+                temperature: 85,
+                pressure: 0.5,
+                speed: 0,
+                efficiency: 0,
+                alerts: [
+                    { type: 'critical', message: 'Electrolysis power supply failure' },
+                    { type: 'critical', message: 'Emergency stop activated' }
+                ]
+            }
+        ];
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'running': return 'running';
+                case 'warning': return 'warning';
+                case 'error': return 'error';
+                case 'maintenance': return 'stopped';
+                default: return 'stopped';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'running': return 'Running';
+                case 'warning': return 'Warning';
+                case 'error': return 'Error';
+                case 'maintenance': return 'Maintenance';
+                default: return 'Stopped';
+            }
+        }
+
+        function getAlertClass(type) {
+            switch(type) {
+                case 'critical': return 'alert-critical';
+                case 'warning': return 'alert-warning';
+                case 'info': return 'alert-info';
+                default: return 'alert-info';
+            }
+        }
+
+        function getAlertIcon(type) {
+            switch(type) {
+                case 'critical': return 'fas fa-exclamation-circle';
+                case 'warning': return 'fas fa-exclamation-triangle';
+                case 'info': return 'fas fa-info-circle';
+                default: return 'fas fa-info-circle';
+            }
+        }
+
+        function renderMachineCard(machine) {
+            const alertsHtml = machine.alerts.length > 0 ? `
+                <div class="machine-alerts">
+                    <strong style="font-size: 0.8rem; color: var(--gray-600);">ALERTS</strong>
+                    ${machine.alerts.map(alert => `
+                        <div class="alert-item ${getAlertClass(alert.type)}">
+                            <i class="${getAlertIcon(alert.type)}"></i>
+                            ${alert.message}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '';
+
+            return `
+                <div class="machine-card ${getStatusClass(machine.status)}">
+                    <div class="machine-header">
+                        <div>
+                            <div class="machine-title">${machine.name}</div>
+                            <div class="machine-id">${machine.id}</div>
+                        </div>
+                        <div class="machine-status-badge status-${getStatusClass(machine.status)}">
+                            ${getStatusText(machine.status)}
+                        </div>
+                    </div>
+                    
+                    <div class="machine-visual ${machine.status === 'running' ? 'visual-running' : ''}">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--gray-600);">
+                            <i class="fas fa-cog" style="font-size: 2rem; ${machine.status === 'running' ? 'animation: spin 2s linear infinite;' : ''}"></i>
+                            <div style="font-size: 0.8rem; margin-top: 8px;">${machine.name}</div>
+                        </div>
+                    </div>
+
+                    <div class="machine-metrics">
+                        <div class="metric">
+                            <div class="metric-value">${machine.temperature}°C</div>
+                            <div class="metric-label">Temperature</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${machine.pressure}</div>
+                            <div class="metric-label">Pressure (bar)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${machine.speed}</div>
+                            <div class="metric-label">Speed (m/min)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${machine.efficiency}%</div>
+                            <div class="metric-label">Efficiency</div>
+                        </div>
+                    </div>
+
+                    ${alertsHtml}
+
+                    <div class="machine-controls">
+                        <button class="control-btn btn-start" ${machine.status === 'running' ? 'disabled' : ''}>
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                        <button class="control-btn btn-stop" ${machine.status !== 'running' ? 'disabled' : ''}>
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <button class="control-btn btn-maintenance">
+                            <i class="fas fa-tools"></i> Maintain
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMachines() {
+            const grid = document.getElementById('machineGrid');
+            const stageFilter = document.getElementById('stageFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filteredMachines = machines;
+
+            if (stageFilter !== 'all') {
+                filteredMachines = filteredMachines.filter(m => m.stage === stageFilter);
+            }
+
+            if (statusFilter !== 'all') {
+                filteredMachines = filteredMachines.filter(m => m.status === statusFilter);
+            }
+
+            grid.innerHTML = filteredMachines.map(renderMachineCard).join('');
+        }
+
+        function refreshMachineStatus() {
+            // Simulate data refresh
+            const refreshBtn = event.target.closest('button');
+            const originalHtml = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<div class="loading"></div> Refreshing...';
+            refreshBtn.disabled = true;
+
+            setTimeout(() => {
+                // Update some random values
+                machines.forEach(machine => {
+                    if (machine.status === 'running') {
+                        machine.efficiency = Math.max(85, Math.min(100, machine.efficiency + (Math.random() - 0.5) * 2));
+                        machine.temperature += (Math.random() - 0.5) * 3;
+                    }
+                });
+
+                renderMachines();
+                refreshBtn.innerHTML = originalHtml;
+                refreshBtn.disabled = false;
+            }, 1500);
+        }
+
+        // Event listeners
+        document.getElementById('stageFilter').addEventListener('change', renderMachines);
+        document.getElementById('statusFilter').addEventListener('change', renderMachines);
+
+        // Initialize
+        renderMachines();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            machines.forEach(machine => {
+                if (machine.status === 'running') {
+                    machine.efficiency = Math.max(85, Math.min(100, machine.efficiency + (Math.random() - 0.5) * 1));
+                    machine.temperature += (Math.random() - 0.5) * 2;
+                }
+            });
+            renderMachines();
+        }, 30000);
+    </script>
+</body>
+</html>

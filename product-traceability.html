@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Traceability - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .search-section {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: var(--space-3);
+            justify-content: flex-end;
+        }
+
+        .lot-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+            border-left: 5px solid var(--secondary-purple);
+        }
+
+        .lot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-5);
+        }
+
+        .lot-info h3 {
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+            font-size: 1.5rem;
+        }
+
+        .lot-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-3);
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        .lot-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-quality-check {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .process-timeline {
+            margin: var(--space-5) 0;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: var(--space-4) 0;
+        }
+
+        .timeline-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gray-200);
+            border-radius: 2px;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success) 0%, var(--secondary-purple) 100%);
+            border-radius: 2px;
+            transform: translateY(-50%);
+            transition: width 0.5s ease;
+        }
+
+        .timeline-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-2);
+            font-size: 1.2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .step-completed {
+            background: var(--success);
+        }
+
+        .step-current {
+            background: var(--secondary-purple);
+            animation: pulse 2s infinite;
+        }
+
+        .step-pending {
+            background: var(--gray-400);
+        }
+
+        .step-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: var(--space-1);
+        }
+
+        .step-time {
+            font-size: 0.7rem;
+            color: var(--gray-500);
+        }
+
+        .quality-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-4);
+            margin: var(--space-5) 0;
+        }
+
+        .quality-metric {
+            text-align: center;
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+
+        .metric-status {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .metric-pass {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .metric-fail {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .process-details {
+            background: var(--gray-50);
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-5);
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .detail-item {
+            background: white;
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--secondary-purple);
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            margin-bottom: var(--space-1);
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .batch-tree {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .tree-node {
+            margin: var(--space-3) 0;
+            padding-left: var(--space-6);
+            position: relative;
+        }
+
+        .tree-node::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: var(--gray-300);
+        }
+
+        .tree-node::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 50%;
+            width: 2px;
+            background: var(--gray-300);
+        }
+
+        .tree-node:first-child::after {
+            display: none;
+        }
+
+        .node-content {
+            background: var(--gray-50);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--info);
+        }
+
+        .alerts-section {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--warning);
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .alert-card {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .alert-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .alert-critical { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .alert-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-description {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .export-section {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item active">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-route"></i>
+                Product Traceability
+            </h1>
+            <div class="breadcrumb">Dashboard / Product Traceability</div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-search"></i> Search Products
+            </h3>
+            <div class="search-form">
+                <div class="form-group">
+                    <label class="form-label">Lot Number</label>
+                    <input type="text" class="form-input" id="lotNumber" placeholder="Enter lot number...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Type</label>
+                    <select class="form-input" id="productType">
+                        <option value="">All Types</option>
+                        <option value="T300">T300 Standard</option>
+                        <option value="T700">T700 Intermediate</option>
+                        <option value="T800">T800 High Strength</option>
+                        <option value="M40J">M40J High Modulus</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Range</label>
+                    <input type="date" class="form-input" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-input" id="endDate">
+                </div>
+            </div>
+            <div class="search-buttons">
+                <button class="btn btn-secondary" onclick="clearSearch()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+                <button class="btn btn-primary" onclick="searchProducts()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="searchResults">
+            <!-- Product Lot Card 1 -->
+            <div class="lot-card">
+                <div class="lot-header">
+                    <div class="lot-info">
+                        <h3>LOT-T700-240905-001</h3>
+                        <div class="lot-meta">
+                            <div><strong>Product:</strong> T700 Carbon Fiber</div>
+                            <div><strong>Quantity:</strong> 1,250 kg</div>
+                            <div><strong>Started:</strong> 2024-09-05 08:00</div>
+                            <div><strong>Customer:</strong> Aerospace Corp</div>
+                        </div>
+                    </div>
+                    <div class="lot-status status-completed">
+                        <div class="status-dot running"></div>
+                        Completed
+                    </div>
+                </div>
+
+                <!-- Process Timeline -->
+                <div class="process-timeline">
+                    <h4 style="margin-bottom: var(--space-4); color: var(--gray-700);">Manufacturing Progress</h4>
+                    <div class="timeline-container">
+                        <div class="timeline-track"></div>
+                        <div class="timeline-progress" style="width: 100%;"></div>
+                        <div class="timeline-steps">
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-flask"></i>
+                                </div>
+                                <div class="step-name">Polymerization</div>
+                                <div class="step-time">Completed<br>09-05 10:30</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-wind"></i>
+                                </div>
+                                <div class="step-name">Spinning</div>
+                                <div class="step-time">Completed<br>09-05 14:15</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="step-name">Stabilization</div>
+                                <div class="step-time">Completed<br>09-05 16:45</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-burn"></i>
+                                </div>
+                                <div class="step-name">Carbonization</div>
+                                <div class="step-time">Completed<br>09-05 18:20</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <div class="step-name">Treatment</div>
+                                <div class="step-time">Completed<br>09-05 20:10</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Metrics -->
+                <div class="quality-metrics">
+                    <div class="quality-metric">
+                        <div class="metric-value">4.2</div>
+                        <div class="metric-label">Tensile Strength (GPa)</div>
+                        <div class="metric-status metric-pass">PASS</div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-value">238</div>
+                        <div class="metric-label">Elastic Modulus (GPa)</div>
+                        <div class="metric-status metric-pass">PASS</div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-value">1.78</div>
+                        <div class="metric-label">Density (g/cm³)</div>
+                        <div class="metric-status metric-pass">PASS</div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-value">7.1</div>
+                        <div class="metric-label">Diameter (μm)</div>
+                        <div class="metric-status metric-pass">PASS</div>
+                    </div>
+                </div>
+
+                <!-- Process Details -->
+                <div class="process-details">
+                    <h4 style="margin-bottom: var(--space-4); color: var(--gray-700);">Process Parameters</h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Spinning Temperature</div>
+                            <div class="detail-value">62°C ± 2°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Stabilization Time</div>
+                            <div class="detail-value">75 minutes</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Carbonization Temp</div>
+                            <div class="detail-value">1,350°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Final Yield</div>
+                            <div class="detail-value">52.3%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Operator ID</div>
+                            <div class="detail-value">OP-045 (John Smith)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Machine Used</div>
+                            <div class="detail-value">SP-001, ST-001, CB-001</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="export-section">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-file-pdf"></i> Export Report
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Download Data
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Print Certificate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Lot Card 2 -->
+            <div class="lot-card">
+                <div class="lot-header">
+                    <div class="lot-info">
+                        <h3>LOT-T800-240906-002</h3>
+                        <div class="lot-meta">
+                            <div><strong>Product:</strong> T800 Carbon Fiber</div>
+                            <div><strong>Quantity:</strong> 800 kg</div>
+                            <div><strong>Started:</strong> 2024-09-06 06:00</div>
+                            <div><strong>Customer:</strong> Automotive Ltd</div>
+                        </div>
+                    </div>
+                    <div class="lot-status status-in-progress">
+                        <div class="status-dot running"></div>
+                        In Progress
+                    </div>
+                </div>
+
+                <!-- Process Timeline -->
+                <div class="process-timeline">
+                    <h4 style="margin-bottom: var(--space-4); color: var(--gray-700);">Manufacturing Progress</h4>
+                    <div class="timeline-container">
+                        <div class="timeline-track"></div>
+                        <div class="timeline-progress" style="width: 60%;"></div>
+                        <div class="timeline-steps">
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-flask"></i>
+                                </div>
+                                <div class="step-name">Polymerization</div>
+                                <div class="step-time">Completed<br>09-06 08:45</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-completed">
+                                    <i class="fas fa-wind"></i>
+                                </div>
+                                <div class="step-name">Spinning</div>
+                                <div class="step-time">Completed<br>09-06 12:30</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-current">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="step-name">Stabilization</div>
+                                <div class="step-time">In Progress<br>Est. 16:00</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-pending">
+                                    <i class="fas fa-burn"></i>
+                                </div>
+                                <div class="step-name">Carbonization</div>
+                                <div class="step-time">Pending<br>Est. 18:30</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-icon step-pending">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <div class="step-name">Treatment</div>
+                                <div class="step-time">Pending<br>Est. 20:15</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Process Details -->
+                <div class="process-details">
+                    <h4 style="margin-bottom: var(--space-4); color: var(--gray-700);">Current Process Status</h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Current Stage</div>
+                            <div class="detail-value">Stabilization (Stage 3/5)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Current Temperature</div>
+                            <div class="detail-value">248°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Time Remaining</div>
+                            <div class="detail-value">45 minutes</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Active Machine</div>
+                            <div class="detail-value">ST-002</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Current Operator</div>
+                            <div class="detail-value">OP-032 (Sarah Johnson)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Progress</div>
+                            <div class="detail-value">60% Complete</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Genealogy -->
+        <div class="batch-tree">
+            <h3 style="margin-bottom: var(--space-4); color: var(--primary-blue);">
+                <i class="fas fa-sitemap"></i> Batch Genealogy - LOT-T700-240905-001
+            </h3>
+            <div class="tree-node">
+                <div class="node-content">
+                    <strong>Raw Materials</strong>
+                    <div style="margin-top: var(--space-2); font-size: 0.9rem; color: var(--gray-600);">
+                        PAN Polymer: Batch RM-PAN-240901-A (Supplier: ChemCorp)
+                    </div>
+                </div>
+                <div class="tree-node">
+                    <div class="node-content">
+                        <strong>Precursor Fiber</strong>
+                        <div style="margin-top: var(--space-2); font-size: 0.9rem; color: var(--gray-600);">
+                            Precursor Batch: PRE-240905-001 (Quality Grade: A+)
+                        </div>
+                    </div>
+                    <div class="tree-node">
+                        <div class="node-content">
+                            <strong>Stabilized Fiber</strong>
+                            <div style="margin-top: var(--space-2); font-size: 0.9rem; color: var(--gray-600);">
+                                Stabilization Batch: STB-240905-001 (Yield: 94.2%)
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <div class="node-content">
+                                <strong>Carbon Fiber</strong>
+                                <div style="margin-top: var(--space-2); font-size: 0.9rem; color: var(--gray-600);">
+                                    Final Product: LOT-T700-240905-001 (Grade: Premium)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Alerts -->
+        <div class="alerts-section">
+            <h3 style="margin-bottom: var(--space-4); color: var(--warning);">
+                <i class="fas fa-exclamation-triangle"></i> Quality Alerts & Notifications
+            </h3>
+            <div class="alert-list">
+                <div class="alert-card">
+                    <div class="alert-icon-wrapper alert-warning">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Temperature Deviation - LOT-T800-240906-002</div>
+                        <div class="alert-description">Stabilization temperature exceeded optimal range by 3°C for 5 minutes at 14:20</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">2 hours ago</div>
+                </div>
+                <div class="alert-card">
+                    <div class="alert-icon-wrapper alert-info">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Quality Check Completed - LOT-T700-240905-001</div>
+                        <div class="alert-description">All quality parameters passed. Product ready for shipment.</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">4 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function searchProducts() {
+            const lotNumber = document.getElementById('lotNumber').value;
+            const productType = document.getElementById('productType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // Simulate search functionality
+            console.log('Searching for products:', { lotNumber, productType, startDate, endDate });
+            
+            // In a real application, this would make an API call
+            // For now, we'll just show the existing results
+        }
+
+        function clearSearch() {
+            document.getElementById('lotNumber').value = '';
+            document.getElementById('productType').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+        }
+
+        // Set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+        });
+
+        // Simulate real-time updates for in-progress lots
+        setInterval(() => {
+            // Update progress for in-progress lots
+            const progressBars = document.querySelectorAll('.timeline-progress');
+            progressBars.forEach((bar, index) => {
+                if (index === 1) { // Second lot is in progress
+                    let currentWidth = parseInt(bar.style.width) || 60;
+                    if (currentWidth < 100) {
+                        bar.style.width = Math.min(100, currentWidth + 0.5) + '%';
+                    }
+                }
+            });
+        }, 30000); // Update every 30 seconds
+    </script>
+</body>
+</html>

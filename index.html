@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CF Manufacturing System - Dashboard Index</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--secondary-purple);
+        }
+
+        .dashboard-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--space-4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+        }
+
+        .dashboard-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-3);
+        }
+
+        .dashboard-description {
+            color: var(--gray-600);
+            margin-bottom: var(--space-5);
+            line-height: 1.6;
+        }
+
+        .dashboard-features {
+            text-align: left;
+            margin-bottom: var(--space-5);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--space-2);
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .feature-item i {
+            color: var(--success);
+            margin-right: var(--space-2);
+            width: 16px;
+        }
+
+        .dashboard-link {
+            display: inline-block;
+            padding: var(--space-3) var(--space-6);
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .system-overview {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: white;
+            padding: var(--space-8);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-8);
+            text-align: center;
+        }
+
+        .overview-title {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .overview-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: var(--space-6);
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-6);
+            margin-top: var(--space-6);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-label {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item active">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="#" class="nav-item">Reports</a></li>
+                <li><a href="#" class="nav-item">Settings</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- System Overview -->
+        <div class="system-overview">
+            <h1 class="overview-title">Carbon Fiber Manufacturing System</h1>
+            <div class="overview-subtitle">Complete Digital Manufacturing Solution with Real-time Monitoring & Analytics</div>
+            
+            <div class="overview-stats">
+                <div class="stat-item">
+                    <div class="stat-number">9</div>
+                    <div class="stat-label">Specialized Dashboards</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Real-time Monitoring</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100+</div>
+                    <div class="stat-label">Process Parameters</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">System Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Main Dashboard -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <h3 class="dashboard-title">Main Dashboard</h3>
+                <p class="dashboard-description">
+                    Comprehensive overview of the entire carbon fiber manufacturing process with real-time KPIs and process flow visualization.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Real-time process flow animation
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Live performance metrics
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Temperature and pressure monitoring
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Alert notifications system
+                        </li>
+                    </ul>
+                </div>
+                <a href="carbon_fiber_dashboard.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Open Dashboard
+                </a>
+            </div>
+
+            <!-- Machine Status -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--success), var(--success-light));">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3 class="dashboard-title">Machine Status</h3>
+                <p class="dashboard-description">
+                    Monitor individual machine performance, status, and maintenance requirements across all production stages.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Individual machine monitoring
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Performance metrics tracking
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Maintenance scheduling
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Machine control interface
+                        </li>
+                    </ul>
+                </div>
+                <a href="machine-status.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> View Machines
+                </a>
+            </div>
+
+            <!-- Product Traceability -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--info), var(--info-light));">
+                    <i class="fas fa-route"></i>
+                </div>
+                <h3 class="dashboard-title">Product Traceability</h3>
+                <p class="dashboard-description">
+                    Complete product lifecycle tracking from raw materials to finished carbon fiber with batch genealogy.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            End-to-end batch tracking
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Process timeline visualization
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Quality parameter history
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Batch genealogy tree
+                        </li>
+                    </ul>
+                </div>
+                <a href="product-traceability.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Track Products
+                </a>
+            </div>
+
+            <!-- Operator Attendance -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--warning), var(--warning-light));">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="dashboard-title">Operator Attendance</h3>
+                <p class="dashboard-description">
+                    Comprehensive workforce management with shift tracking, attendance monitoring, and performance analytics.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Real-time attendance tracking
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Shift management system
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Weekly schedule overview
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Performance metrics
+                        </li>
+                    </ul>
+                </div>
+                <a href="operator-attendance.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Manage Staff
+                </a>
+            </div>
+
+            <!-- Operator Training -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3 class="dashboard-title">Training & Certifications</h3>
+                <p class="dashboard-description">
+                    Complete training management system with certification tracking, compliance monitoring, and skill development.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Training records & progress
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            License & certification tracking
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Compliance monitoring
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Scheduled training calendar
+                        </li>
+                    </ul>
+                </div>
+                <a href="operator-training.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Training Hub
+                </a>
+            </div>
+
+            <!-- Quality Tracking -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--error), var(--error-light));">
+                    <i class="fas fa-award"></i>
+                </div>
+                <h3 class="dashboard-title">Quality Tracking</h3>
+                <p class="dashboard-description">
+                    Advanced quality control with SPC charts, defect analysis, and specification compliance monitoring.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Statistical Process Control
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Real-time quality metrics
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Defect analysis & trends
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Batch quality comparison
+                        </li>
+                    </ul>
+                </div>
+                <a href="quality-tracking.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Quality Control
+                </a>
+            </div>
+
+            <!-- Correlation Analysis -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                    <i class="fas fa-chart-scatter"></i>
+                </div>
+                <h3 class="dashboard-title">Correlation Analysis</h3>
+                <p class="dashboard-description">
+                    Advanced analytics for discovering relationships between machines, quality, energy, production lots, and operators.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Machine-Quality correlations
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Energy-Production analysis
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Operator performance impact
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Multi-variable analysis
+                        </li>
+                    </ul>
+                </div>
+                <a href="correlation-analysis.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Analyze Data
+                </a>
+            </div>
+
+            <!-- Energy Monitoring -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="dashboard-title">Energy Monitoring</h3>
+                <p class="dashboard-description">
+                    Detailed energy consumption tracking with efficiency analysis and cost optimization recommendations.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Real-time energy consumption
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Equipment-wise breakdown
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Efficiency optimization
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Cost analysis & forecasting
+                        </li>
+                    </ul>
+                </div>
+                <a href="energy-monitoring.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Monitor Energy
+                </a>
+            </div>
+
+            <!-- Chronological Review -->
+            <div class="dashboard-card">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3 class="dashboard-title">Chronological Review</h3>
+                <p class="dashboard-description">
+                    Time-based analysis system for historical data review, trend identification, and predictive insights.
+                </p>
+                <div class="dashboard-features">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Historical data timeline
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Event correlation analysis
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Trend identification
+                        </li>
+                        <li class="feature-item">
+                            <i class="fas fa-check"></i>
+                            Predictive insights
+                        </li>
+                    </ul>
+                </div>
+                <a href="chronological-review.html" class="dashboard-link">
+                    <i class="fas fa-arrow-right"></i> Review Timeline
+                </a>
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="card">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-info-circle"></i> System Information
+            </h3>
+            <div class="grid-2">
+                <div>
+                    <h4 style="color: var(--gray-700); margin-bottom: var(--space-3);">Technology Stack</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: var(--space-2);"><strong>Frontend:</strong> HTML5, CSS3, JavaScript</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Charts:</strong> Chart.js for data visualization</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Icons:</strong> Font Awesome 6.0</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Design:</strong> Unified CSS framework</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Responsive:</strong> Mobile and tablet optimized</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--gray-700); margin-bottom: var(--space-3);">Key Features</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: var(--space-2);"><i class="fas fa-check" style="color: var(--success);"></i> Real-time data updates</li>
+                        <li style="margin-bottom: var(--space-2);"><i class="fas fa-check" style="color: var(--success);"></i> Interactive visualizations</li>
+                        <li style="margin-bottom: var(--space-2);"><i class="fas fa-check" style="color: var(--success);"></i> Professional UI/UX design</li>
+                        <li style="margin-bottom: var(--space-2);"><i class="fas fa-check" style="color: var(--success);"></i> Unified navigation system</li>
+                        <li style="margin-bottom: var(--space-2);"><i class="fas fa-check" style="color: var(--success);"></i> Comprehensive monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on load
+            const cards = document.querySelectorAll('.dashboard-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

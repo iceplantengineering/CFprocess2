@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronological Review - CF Manufacturing</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .timeline-controls {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            align-items: end;
+        }
+
+        .time-range-selector {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .time-button {
+            padding: var(--space-2) var(--space-4);
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .time-button.active {
+            background: var(--secondary-purple);
+            color: white;
+            border-color: var(--secondary-purple);
+        }
+
+        .time-button:hover:not(.active) {
+            background: var(--gray-100);
+        }
+
+        .timeline-main {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .timeline-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .timeline-legend {
+            display: flex;
+            gap: var(--space-4);
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .event-production { background: var(--info); }
+        .event-quality { background: var(--warning); }
+        .event-maintenance { background: var(--error); }
+        .event-energy { background: var(--success); }
+        .event-operator { background: var(--secondary-purple); }
+
+        .timeline-container {
+            position: relative;
+            margin: var(--space-6) 0;
+        }
+
+        .timeline-axis {
+            position: relative;
+            height: 400px;
+            border-left: 3px solid var(--gray-300);
+            margin-left: var(--space-8);
+        }
+
+        .time-marker {
+            position: absolute;
+            left: -20px;
+            transform: translateY(-50%);
+            background: white;
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-300);
+        }
+
+        .timeline-event {
+            position: absolute;
+            left: var(--space-4);
+            transform: translateY(-50%);
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-md);
+            min-width: 300px;
+            max-width: 400px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--info);
+        }
+
+        .timeline-event:hover {
+            transform: translateY(-50%) translateX(10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .timeline-event.production { border-left-color: var(--info); }
+        .timeline-event.quality { border-left-color: var(--warning); }
+        .timeline-event.maintenance { border-left-color: var(--error); }
+        .timeline-event.energy { border-left-color: var(--success); }
+        .timeline-event.operator { border-left-color: var(--secondary-purple); }
+
+        .event-dot {
+            position: absolute;
+            left: -28px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--info);
+            border: 3px solid white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .event-time {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        .event-impact {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .impact-high { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+        .impact-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .impact-low { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        .event-description {
+            color: var(--gray-700);
+            margin-bottom: var(--space-3);
+            line-height: 1.4;
+        }
+
+        .event-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: var(--space-2);
+            font-size: 0.8rem;
+        }
+
+        .event-metric {
+            text-align: center;
+            padding: var(--space-2);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-label {
+            color: var(--gray-600);
+        }
+
+        .analysis-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .analysis-panel {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .correlation-matrix {
+            display: grid;
+            grid-template-columns: 120px repeat(4, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+        }
+
+        .matrix-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: var(--space-2);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .matrix-cell {
+            background: white;
+            padding: var(--space-2);
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .matrix-cell:hover {
+            background: var(--gray-100);
+        }
+
+        .correlation-strong { background: rgba(16, 185, 129, 0.8) !important; color: white; }
+        .correlation-moderate { background: rgba(245, 158, 11, 0.6) !important; color: white; }
+        .correlation-weak { background: rgba(59, 130, 246, 0.4) !important; }
+
+        .pattern-insights {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+        }
+
+        .insight-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            background: var(--info);
+            flex-shrink: 0;
+            margin-top: var(--space-1);
+        }
+
+        .insight-content {
+            flex: 1;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .insight-description {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            line-height: 1.4;
+        }
+
+        .predictive-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--secondary-purple);
+            margin-bottom: var(--space-6);
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .prediction-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .prediction-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .confidence-level {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .confidence-high { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .confidence-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .confidence-low { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+
+        .prediction-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-purple);
+            text-align: center;
+            margin: var(--space-4) 0;
+        }
+
+        .prediction-factors {
+            background: var(--gray-50);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+        }
+
+        .factor-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .factor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .factor-item:last-child {
+            border-bottom: none;
+        }
+
+        .factor-weight {
+            font-weight: 600;
+            color: var(--secondary-purple);
+        }
+
+        .event-filters {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-button {
+            padding: var(--space-2) var(--space-4);
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .filter-button.active {
+            background: var(--secondary-purple);
+            color: white;
+            border-color: var(--secondary-purple);
+        }
+
+        .filter-button:hover:not(.active) {
+            background: var(--gray-100);
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+        }
+
+        .zoom-button {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-button:hover {
+            background: var(--gray-100);
+        }
+
+        .export-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-option:hover {
+            border-color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .export-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--secondary-purple);
+        }
+
+        .export-content {
+            flex: 1;
+        }
+
+        .export-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .export-description {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item active">Timeline</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-history"></i>
+                Chronological Review & Historical Analysis
+            </h1>
+            <div class="breadcrumb">Dashboard / Chronological Review</div>
+        </div>
+
+        <!-- Timeline Controls -->
+        <div class="timeline-controls">
+            <div class="controls-grid">
+                <div class="form-group">
+                    <label class="form-label">Time Range</label>
+                    <div class="time-range-selector">
+                        <button class="time-button" onclick="selectTimeRange('1d')">1 Day</button>
+                        <button class="time-button active" onclick="selectTimeRange('1w')">1 Week</button>
+                        <button class="time-button" onclick="selectTimeRange('1m')">1 Month</button>
+                        <button class="time-button" onclick="selectTimeRange('3m')">3 Months</button>
+                        <button class="time-button" onclick="selectTimeRange('1y')">1 Year</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Event Filters</label>
+                    <div class="event-filters">
+                        <button class="filter-button active" onclick="toggleFilter('all')">
+                            <i class="fas fa-list"></i> All Events
+                        </button>
+                        <button class="filter-button" onclick="toggleFilter('production')">
+                            <div class="legend-dot event-production"></div> Production
+                        </button>
+                        <button class="filter-button" onclick="toggleFilter('quality')">
+                            <div class="legend-dot event-quality"></div> Quality
+                        </button>
+                        <button class="filter-button" onclick="toggleFilter('maintenance')">
+                            <div class="legend-dot event-maintenance"></div> Maintenance
+                        </button>
+                        <button class="filter-button" onclick="toggleFilter('energy')">
+                            <div class="legend-dot event-energy"></div> Energy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date Range</label>
+                    <div style="display: flex; gap: var(--space-2);">
+                        <input type="date" class="form-input" id="startDate" style="flex: 1;">
+                        <input type="date" class="form-input" id="endDate" style="flex: 1;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Timeline Controls</label>
+                    <div class="zoom-controls">
+                        <button class="zoom-button" onclick="zoomTimeline('in')" title="Zoom In">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="zoom-button" onclick="zoomTimeline('out')" title="Zoom Out">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="zoom-button" onclick="resetTimeline()" title="Reset View">
+                            <i class="fas fa-home"></i>
+                        </button>
+                        <button class="zoom-button" onclick="autoPlay()" title="Auto Play">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Timeline -->
+        <div class="timeline-main">
+            <div class="timeline-header">
+                <div class="timeline-title">Manufacturing Event Timeline</div>
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot event-production"></div>
+                        <span>Production Events</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot event-quality"></div>
+                        <span>Quality Issues</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot event-maintenance"></div>
+                        <span>Maintenance</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot event-energy"></div>
+                        <span>Energy Events</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot event-operator"></div>
+                        <span>Operator Activities</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-container">
+                <div class="timeline-axis">
+                    <!-- Time markers -->
+                    <div class="time-marker" style="top: 10%;">09:00</div>
+                    <div class="time-marker" style="top: 30%;">12:00</div>
+                    <div class="time-marker" style="top: 50%;">15:00</div>
+                    <div class="time-marker" style="top: 70%;">18:00</div>
+                    <div class="time-marker" style="top: 90%;">21:00</div>
+
+                    <!-- Timeline Events -->
+                    <div class="timeline-event production" style="top: 15%;">
+                        <div class="event-dot event-production"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Production Batch Started</div>
+                                <div class="event-time">Today 09:15 AM</div>
+                            </div>
+                            <div class="event-impact impact-medium">Medium</div>
+                        </div>
+                        <div class="event-description">
+                            New production batch LOT-T800-240906-003 initiated on Spinning Unit 1. Raw material quality grade A+, expected output 850kg.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">850kg</div>
+                                <div class="metric-label">Target</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">SP-001</div>
+                                <div class="metric-label">Machine</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">A+</div>
+                                <div class="metric-label">Material</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-event quality" style="top: 25%;">
+                        <div class="event-dot event-quality"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Quality Alert Triggered</div>
+                                <div class="event-time">Today 10:42 AM</div>
+                            </div>
+                            <div class="event-impact impact-high">High</div>
+                        </div>
+                        <div class="event-description">
+                            Diameter variation exceeded tolerance (+0.8μm) on Stabilization Furnace 2. Automatic adjustment initiated, operator notified.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">7.8μm</div>
+                                <div class="metric-label">Diameter</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">ST-002</div>
+                                <div class="metric-label">Equipment</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">3.2%</div>
+                                <div class="metric-label">Deviation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-event energy" style="top: 40%;">
+                        <div class="event-dot event-energy"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Energy Optimization Applied</div>
+                                <div class="event-time">Today 13:20 PM</div>
+                            </div>
+                            <div class="event-impact impact-low">Low</div>
+                        </div>
+                        <div class="event-description">
+                            Automatic load balancing activated during peak hours. Power consumption reduced by 5.2% without affecting production targets.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">-147kW</div>
+                                <div class="metric-label">Saved</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">5.2%</div>
+                                <div class="metric-label">Reduction</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">$459</div>
+                                <div class="metric-label">Cost Save</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-event maintenance" style="top: 55%;">
+                        <div class="event-dot event-maintenance"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Preventive Maintenance Completed</div>
+                                <div class="event-time">Today 15:45 PM</div>
+                            </div>
+                            <div class="event-impact impact-medium">Medium</div>
+                        </div>
+                        <div class="event-description">
+                            Scheduled maintenance on Carbonization Furnace 1 completed 15 minutes ahead of schedule. All systems operational, efficiency improved by 2.3%.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">CB-001</div>
+                                <div class="metric-label">Equipment</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">45min</div>
+                                <div class="metric-label">Duration</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">+2.3%</div>
+                                <div class="metric-label">Efficiency</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-event operator" style="top: 75%;">
+                        <div class="event-dot event-operator"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Shift Change & Handover</div>
+                                <div class="event-time">Today 18:00 PM</div>
+                            </div>
+                            <div class="event-impact impact-low">Low</div>
+                        </div>
+                        <div class="event-description">
+                            Day shift to evening shift handover completed. Production status briefed, all critical parameters within normal ranges.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">14</div>
+                                <div class="metric-label">Operators</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">98.5%</div>
+                                <div class="metric-label">Attendance</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">5min</div>
+                                <div class="metric-label">Handover</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-event production" style="top: 85%;">
+                        <div class="event-dot event-production"></div>
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">Batch Quality Inspection Passed</div>
+                                <div class="event-time">Today 20:30 PM</div>
+                            </div>
+                            <div class="event-impact impact-medium">Medium</div>
+                        </div>
+                        <div class="event-description">
+                            Final quality inspection for LOT-T800-240906-003 completed with Grade A+ rating. Batch ready for customer shipment.
+                        </div>
+                        <div class="event-metrics">
+                            <div class="event-metric">
+                                <div class="metric-value">A+</div>
+                                <div class="metric-label">Grade</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">847kg</div>
+                                <div class="metric-label">Actual</div>
+                            </div>
+                            <div class="event-metric">
+                                <div class="metric-value">99.6%</div>
+                                <div class="metric-label">Yield</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Panels -->
+        <div class="analysis-panels">
+            <!-- Event Correlation Analysis -->
+            <div class="analysis-panel">
+                <div class="panel-header">
+                    <i class="fas fa-project-diagram"></i>
+                    Event Correlation Analysis
+                </div>
+                <div class="correlation-matrix">
+                    <div class="matrix-header"></div>
+                    <div class="matrix-header">Production</div>
+                    <div class="matrix-header">Quality</div>
+                    <div class="matrix-header">Maintenance</div>
+                    <div class="matrix-header">Energy</div>
+
+                    <div class="matrix-header">Production</div>
+                    <div class="matrix-cell correlation-strong">0.89</div>
+                    <div class="matrix-cell correlation-moderate">0.67</div>
+                    <div class="matrix-cell correlation-weak">0.34</div>
+                    <div class="matrix-cell correlation-moderate">0.72</div>
+
+                    <div class="matrix-header">Quality</div>
+                    <div class="matrix-cell correlation-moderate">0.67</div>
+                    <div class="matrix-cell correlation-strong">0.91</div>
+                    <div class="matrix-cell correlation-weak">0.28</div>
+                    <div class="matrix-cell correlation-weak">0.45</div>
+
+                    <div class="matrix-header">Maintenance</div>
+                    <div class="matrix-cell correlation-weak">0.34</div>
+                    <div class="matrix-cell correlation-weak">0.28</div>
+                    <div class="matrix-cell correlation-strong">0.88</div>
+                    <div class="matrix-cell correlation-moderate">0.56</div>
+
+                    <div class="matrix-header">Energy</div>
+                    <div class="matrix-cell correlation-moderate">0.72</div>
+                    <div class="matrix-cell correlation-weak">0.45</div>
+                    <div class="matrix-cell correlation-moderate">0.56</div>
+                    <div class="matrix-cell correlation-strong">0.93</div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--gray-600); text-align: center;">
+                    Values show temporal correlation strength between event types
+                </div>
+            </div>
+
+            <!-- Pattern Recognition -->
+            <div class="analysis-panel">
+                <div class="panel-header">
+                    <i class="fas fa-search"></i>
+                    Pattern Recognition
+                </div>
+                <div class="chart-container chart-small">
+                    <canvas id="patternChart"></canvas>
+                </div>
+                <div class="pattern-insights">
+                    <strong style="display: block; margin-bottom: var(--space-3);">Detected Patterns:</strong>
+                    <ul class="insight-list">
+                        <li class="insight-item">
+                            <div class="insight-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="insight-content">
+                                <div class="insight-title">Peak Quality Issues at 14:00-16:00</div>
+                                <div class="insight-description">Quality alerts show 67% increase during afternoon shift change. Recommend process stabilization.</div>
+                            </div>
+                        </li>
+                        <li class="insight-item">
+                            <div class="insight-icon" style="background: var(--success);">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <div class="insight-content">
+                                <div class="insight-title">Energy Optimization Opportunities</div>
+                                <div class="insight-description">Daily pattern shows 12% energy savings potential during 22:00-06:00 period through load scheduling.</div>
+                            </div>
+                        </li>
+                        <li class="insight-item">
+                            <div class="insight-icon" style="background: var(--warning);">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="insight-content">
+                                <div class="insight-title">Maintenance Correlation</div>
+                                <div class="insight-description">Preventive maintenance events correlate with 15% quality improvement in subsequent 48-hour period.</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictive Analytics -->
+        <div class="predictive-section">
+            <h3 style="color: var(--secondary-purple); margin-bottom: var(--space-4);">
+                <i class="fas fa-crystal-ball"></i> Predictive Analytics Based on Historical Patterns
+            </h3>
+            <div class="prediction-grid">
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Next Quality Event Prediction</div>
+                        <div class="confidence-level confidence-high">89% Confidence</div>
+                    </div>
+                    <div class="prediction-value">14:30 Tomorrow</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Likely Event: Temperature deviation on ST-002
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Prediction Factors:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Historical pattern match</span>
+                                <span class="factor-weight">32%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Equipment condition trend</span>
+                                <span class="factor-weight">28%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Operator shift pattern</span>
+                                <span class="factor-weight">23%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Environmental factors</span>
+                                <span class="factor-weight">17%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Optimal Maintenance Window</div>
+                        <div class="confidence-level confidence-medium">76% Confidence</div>
+                    </div>
+                    <div class="prediction-value">Sunday 02:00-06:00</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Minimal impact maintenance slot for CB-002
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Optimization Criteria:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Production schedule gap</span>
+                                <span class="factor-weight">35%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Energy cost optimization</span>
+                                <span class="factor-weight">27%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Staff availability</span>
+                                <span class="factor-weight">22%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Historical success rate</span>
+                                <span class="factor-weight">16%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">Production Efficiency Forecast</div>
+                        <div class="confidence-level confidence-high">91% Confidence</div>
+                    </div>
+                    <div class="prediction-value">96.8%</div>
+                    <div style="text-align: center; color: var(--gray-600); margin-bottom: var(--space-3);">
+                        Expected efficiency for next 7 days
+                    </div>
+                    <div class="prediction-factors">
+                        <strong style="display: block; margin-bottom: var(--space-2);">Influencing Trends:</strong>
+                        <ul class="factor-list">
+                            <li class="factor-item">
+                                <span>Recent maintenance impact</span>
+                                <span class="factor-weight">+2.3%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Seasonal material quality</span>
+                                <span class="factor-weight">+1.1%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Operator experience curve</span>
+                                <span class="factor-weight">+0.8%</span>
+                            </li>
+                            <li class="factor-item">
+                                <span>Energy cost pressure</span>
+                                <span class="factor-weight">-0.4%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export and Reporting -->
+        <div class="export-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">
+                <i class="fas fa-download"></i> Export & Reporting Options
+            </h3>
+            <div class="export-options">
+                <div class="export-option" onclick="exportData('timeline')">
+                    <div class="export-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="export-content">
+                        <div class="export-title">Timeline Report</div>
+                        <div class="export-description">Comprehensive PDF report with event analysis</div>
+                    </div>
+                </div>
+
+                <div class="export-option" onclick="exportData('csv')">
+                    <div class="export-icon" style="background: var(--success);">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <div class="export-content">
+                        <div class="export-title">Raw Data Export</div>
+                        <div class="export-description">CSV format for further analysis</div>
+                    </div>
+                </div>
+
+                <div class="export-option" onclick="exportData('dashboard')">
+                    <div class="export-icon" style="background: var(--warning);">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="export-content">
+                        <div class="export-title">Executive Dashboard</div>
+                        <div class="export-description">High-level summary for management</div>
+                    </div>
+                </div>
+
+                <div class="export-option" onclick="exportData('insights')">
+                    <div class="export-icon" style="background: var(--info);">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="export-content">
+                        <div class="export-title">Insights Report</div>
+                        <div class="export-description">AI-generated patterns and recommendations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTimeRange = '1w';
+        let activeFilters = ['all'];
+
+        // Time range selection
+        function selectTimeRange(range) {
+            currentTimeRange = range;
+            document.querySelectorAll('.time-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            console.log('Time range changed to:', range);
+            // In real application, this would reload timeline data
+        }
+
+        // Filter toggles
+        function toggleFilter(filterType) {
+            const button = event.target.closest('.filter-button');
+            
+            if (filterType === 'all') {
+                // Clear all other filters when 'all' is selected
+                document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                activeFilters = ['all'];
+            } else {
+                // Remove 'all' filter when specific filter is selected
+                document.querySelectorAll('.filter-button').forEach(btn => {
+                    if (btn.textContent.includes('All Events')) {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                button.classList.toggle('active');
+                
+                if (button.classList.contains('active')) {
+                    if (!activeFilters.includes(filterType)) {
+                        activeFilters.push(filterType);
+                    }
+                    activeFilters = activeFilters.filter(f => f !== 'all');
+                } else {
+                    activeFilters = activeFilters.filter(f => f !== filterType);
+                }
+                
+                // If no filters active, activate 'all'
+                if (activeFilters.length === 0) {
+                    document.querySelector('.filter-button').classList.add('active');
+                    activeFilters = ['all'];
+                }
+            }
+            
+            console.log('Active filters:', activeFilters);
+            filterTimelineEvents();
+        }
+
+        // Filter timeline events based on active filters
+        function filterTimelineEvents() {
+            const events = document.querySelectorAll('.timeline-event');
+            events.forEach(event => {
+                const eventType = Array.from(event.classList).find(cls => 
+                    ['production', 'quality', 'maintenance', 'energy', 'operator'].includes(cls)
+                );
+                
+                if (activeFilters.includes('all') || activeFilters.includes(eventType)) {
+                    event.style.display = 'block';
+                } else {
+                    event.style.display = 'none';
+                }
+            });
+        }
+
+        // Timeline control functions
+        function zoomTimeline(direction) {
+            console.log('Zoom timeline:', direction);
+            // Implementation for zooming timeline
+        }
+
+        function resetTimeline() {
+            console.log('Reset timeline view');
+            // Implementation for resetting timeline
+        }
+
+        function autoPlay() {
+            console.log('Auto play timeline');
+            // Implementation for auto-playing through timeline
+        }
+
+        // Export functions
+        function exportData(type) {
+            console.log('Exporting data as:', type);
+            // Implementation for data export
+        }
+
+        // Initialize pattern recognition chart
+        function initPatternChart() {
+            const ctx = document.getElementById('patternChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Quality Events',
+                        data: [3, 7, 4, 8, 5, 2, 1],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Production Events',
+                        data: [8, 12, 10, 15, 11, 6, 4],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Maintenance Events',
+                        data: [1, 2, 3, 1, 2, 4, 2],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Set default date range
+        function setDefaultDates() {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = weekAgo.toISOString().split('T')[0];
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initPatternChart();
+            setDefaultDates();
+            
+            // Add click handlers to timeline events
+            document.querySelectorAll('.timeline-event').forEach(event => {
+                event.addEventListener('click', function() {
+                    console.log('Timeline event clicked:', this.querySelector('.event-title').textContent);
+                    // Show detailed event information
+                });
+            });
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update timeline with new events
+            console.log('Checking for new timeline events...');
+        }, 30000);
+    </script>
+</body>
+</html>
