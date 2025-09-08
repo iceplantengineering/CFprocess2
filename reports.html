@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - CF Manufacturing System</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .report-header {
+            background: white;
+            padding: var(--space-8);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+            text-align: center;
+        }
+
+        .report-title {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-4);
+            font-weight: bold;
+        }
+
+        .report-subtitle {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+            margin-bottom: var(--space-6);
+        }
+
+        .report-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-top: var(--space-6);
+            padding-top: var(--space-4);
+            border-top: 2px solid var(--gray-200);
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: var(--space-1);
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .print-controls {
+            background: white;
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+        }
+
+        .print-button {
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            color: white;
+            border: none;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 1rem;
+        }
+
+        .print-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-options {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: var(--gray-100);
+            border: 2px solid var(--gray-300);
+            color: var(--gray-700);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .export-btn:hover {
+            border-color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .report-section {
+            background: white;
+            padding: var(--space-8);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .metric-card {
+            background: var(--gray-50);
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--success);
+            text-align: center;
+        }
+
+        .metric-card.warning { border-left-color: var(--warning); }
+        .metric-card.error { border-left-color: var(--error); }
+        .metric-card.info { border-left-color: var(--info); }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .metric-label {
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.9rem;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+        }
+
+        .change-positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .change-negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .change-neutral {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gray-600);
+        }
+
+        .chart-section {
+            margin: var(--space-6) 0;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: var(--space-4) 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-4);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: var(--space-3);
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .data-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .status-badge {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-excellent {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-good {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-poor {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-left: 4px solid var(--secondary-purple);
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-6);
+        }
+
+        .recommendations h4 {
+            color: var(--primary-blue);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .recommendation-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--space-3);
+            flex-shrink: 0;
+        }
+
+        .icon-priority-high { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+        .icon-priority-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .icon-priority-low { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        .recommendation-content h5 {
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .recommendation-content p {
+            color: var(--gray-700);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+            }
+            
+            .nav-container,
+            .print-controls {
+                display: none !important;
+            }
+            
+            .report-container {
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            
+            .report-section {
+                box-shadow: none !important;
+                border: 1px solid var(--gray-300) !important;
+                page-break-inside: avoid;
+                margin-bottom: var(--space-4) !important;
+            }
+            
+            .chart-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .report-title {
+                font-size: 2rem;
+            }
+            
+            .print-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .export-options {
+                justify-content: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+                <li><a href="reports.html" class="nav-item active">Reports</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="report-container">
+        <!-- Report Header -->
+        <div class="report-header">
+            <div class="report-title">
+                <i class="fas fa-chart-bar"></i>
+                Monthly Production Report
+            </div>
+            <div class="report-subtitle">
+                Carbon Fiber Manufacturing Performance Analysis
+            </div>
+            <div class="report-info">
+                <div class="info-item">
+                    <div class="info-label">Report Period</div>
+                    <div class="info-value">November 2024</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Generated On</div>
+                    <div class="info-value" id="reportDate">Dec 8, 2024</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Report Type</div>
+                    <div class="info-value">Comprehensive</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">Final</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Controls -->
+        <div class="print-controls">
+            <div class="export-options">
+                <button class="export-btn" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i>
+                    Export PDF
+                </button>
+                <button class="export-btn" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i>
+                    Export Excel
+                </button>
+                <button class="export-btn" onclick="exportReport('word')">
+                    <i class="fas fa-file-word"></i>
+                    Export Word
+                </button>
+            </div>
+            <button class="print-button" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                Print Report
+            </button>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="report-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Executive Summary
+            </h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">4,247 kg</div>
+                    <div class="metric-label">Total Production</div>
+                    <div class="metric-change change-positive">
+                        <i class="fas fa-arrow-up"></i> +12.3% vs Last Month
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">96.8%</div>
+                    <div class="metric-label">Average Quality Rate</div>
+                    <div class="metric-change change-positive">
+                        <i class="fas fa-arrow-up"></i> +2.1% vs Last Month
+                    </div>
+                </div>
+                <div class="metric-card warning">
+                    <div class="metric-value">87.2%</div>
+                    <div class="metric-label">Overall Equipment Efficiency</div>
+                    <div class="metric-change change-negative">
+                        <i class="fas fa-arrow-down"></i> -1.5% vs Last Month
+                    </div>
+                </div>
+                <div class="metric-card info">
+                    <div class="metric-value">$2.1M</div>
+                    <div class="metric-label">Production Value</div>
+                    <div class="metric-change change-positive">
+                        <i class="fas fa-arrow-up"></i> +15.7% vs Last Month
+                    </div>
+                </div>
+            </div>
+            <p style="color: var(--gray-700); line-height: 1.6; margin-top: var(--space-4);">
+                November 2024 showed strong performance with production exceeding targets by 12.3%. 
+                Quality improvements were significant, driven by enhanced machine maintenance protocols 
+                and operator training programs. However, equipment efficiency declined slightly due to 
+                scheduled maintenance activities affecting overall uptime.
+            </p>
+        </div>
+
+        <!-- Production Analysis -->
+        <div class="report-section">
+            <h2 class="section-title">
+                <i class="fas fa-industry"></i>
+                Production Analysis
+            </h2>
+            <div class="chart-section">
+                <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">Daily Production Trends</h3>
+                <div class="chart-container">
+                    <canvas id="productionChart"></canvas>
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Production (kg)</th>
+                        <th>Target (kg)</th>
+                        <th>Achievement %</th>
+                        <th>Quality Rate</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Week 1 (Nov 1-7)</td>
+                        <td>1,089</td>
+                        <td>1,000</td>
+                        <td>108.9%</td>
+                        <td>97.2%</td>
+                        <td><span class="status-badge status-excellent">Excellent</span></td>
+                    </tr>
+                    <tr>
+                        <td>Week 2 (Nov 8-14)</td>
+                        <td>1,156</td>
+                        <td>1,000</td>
+                        <td>115.6%</td>
+                        <td>96.8%</td>
+                        <td><span class="status-badge status-excellent">Excellent</span></td>
+                    </tr>
+                    <tr>
+                        <td>Week 3 (Nov 15-21)</td>
+                        <td>1,234</td>
+                        <td>1,000</td>
+                        <td>123.4%</td>
+                        <td>96.1%</td>
+                        <td><span class="status-badge status-excellent">Excellent</span></td>
+                    </tr>
+                    <tr>
+                        <td>Week 4 (Nov 22-28)</td>
+                        <td>768</td>
+                        <td>1,000</td>
+                        <td>76.8%</td>
+                        <td>97.8%</td>
+                        <td><span class="status-badge status-warning">Below Target</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Quality Metrics -->
+        <div class="report-section">
+            <h2 class="section-title">
+                <i class="fas fa-award"></i>
+                Quality Metrics
+            </h2>
+            <div class="chart-section">
+                <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">Quality Trends</h3>
+                <div class="chart-container">
+                    <canvas id="qualityChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">0.34%</div>
+                    <div class="metric-label">Average Defect Rate</div>
+                    <div class="metric-change change-positive">
+                        <i class="fas fa-arrow-down"></i> -0.12% vs Last Month
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">99.66%</div>
+                    <div class="metric-label">Pass Rate</div>
+                    <div class="metric-change change-positive">
+                        <i class="fas fa-arrow-up"></i> +0.12% vs Last Month
+                    </div>
+                </div>
+                <div class="metric-card info">
+                    <div class="metric-value">127</div>
+                    <div class="metric-label">Total Batches Tested</div>
+                    <div class="metric-change change-neutral">
+                        <i class="fas fa-minus"></i> Same as Last Month
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Performance -->
+        <div class="report-section">
+            <h2 class="section-title">
+                <i class="fas fa-cogs"></i>
+                Equipment Performance
+            </h2>
+            <div class="chart-section">
+                <h3 style="color: var(--primary-blue); margin-bottom: var(--space-4);">Equipment Efficiency</h3>
+                <div class="chart-container">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Equipment</th>
+                        <th>Uptime %</th>
+                        <th>Efficiency %</th>
+                        <th>Maintenance Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Spinning Unit 1</td>
+                        <td>94.2%</td>
+                        <td>91.8%</td>
+                        <td>12.5</td>
+                        <td><span class="status-badge status-good">Good</span></td>
+                    </tr>
+                    <tr>
+                        <td>Stabilization Furnace</td>
+                        <td>89.7%</td>
+                        <td>87.3%</td>
+                        <td>24.8</td>
+                        <td><span class="status-badge status-warning">Needs Attention</span></td>
+                    </tr>
+                    <tr>
+                        <td>Carbonization Furnace</td>
+                        <td>96.8%</td>
+                        <td>94.2%</td>
+                        <td>8.2</td>
+                        <td><span class="status-badge status-excellent">Excellent</span></td>
+                    </tr>
+                    <tr>
+                        <td>Surface Treatment</td>
+                        <td>91.5%</td>
+                        <td>89.1%</td>
+                        <td>16.3</td>
+                        <td><span class="status-badge status-good">Good</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="report-section">
+            <div class="recommendations">
+                <h4>
+                    <i class="fas fa-lightbulb"></i>
+                    Key Recommendations
+                </h4>
+                <ul class="recommendation-list">
+                    <li class="recommendation-item">
+                        <div class="recommendation-icon icon-priority-high">
+                            <i class="fas fa-exclamation"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Stabilization Furnace Maintenance</h5>
+                            <p>Schedule comprehensive maintenance for the stabilization furnace to address declining efficiency and increased downtime. This is critical for maintaining production targets in December.</p>
+                        </div>
+                    </li>
+                    <li class="recommendation-item">
+                        <div class="recommendation-icon icon-priority-medium">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Production Planning Optimization</h5>
+                            <p>Implement predictive maintenance scheduling to minimize impact on production targets. Consider staggered maintenance windows to maintain overall capacity.</p>
+                        </div>
+                    </li>
+                    <li class="recommendation-item">
+                        <div class="recommendation-icon icon-priority-low">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Operator Training Enhancement</h5>
+                            <p>Continue advanced training programs which have contributed to the quality improvements. Focus on cross-training to improve operational flexibility.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+
+        // Initialize charts
+        function initReportCharts() {
+            // Production Chart
+            const productionCtx = document.getElementById('productionChart').getContext('2d');
+            new Chart(productionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Nov 1', 'Nov 5', 'Nov 10', 'Nov 15', 'Nov 20', 'Nov 25', 'Nov 30'],
+                    datasets: [{
+                        label: 'Daily Production (kg)',
+                        data: [145, 167, 189, 198, 156, 134, 142],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Target (kg)',
+                        data: [140, 140, 140, 140, 140, 140, 140],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Production (kg)' }
+                        }
+                    }
+                }
+            });
+
+            // Quality Chart
+            const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+            new Chart(qualityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Quality Rate (%)',
+                        data: [97.2, 96.8, 96.1, 97.8],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1
+                    }, {
+                        label: 'Defect Rate (%)',
+                        data: [0.28, 0.32, 0.39, 0.22],
+                        backgroundColor: 'rgba(220, 38, 38, 0.8)',
+                        borderColor: '#dc2626',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Quality Rate (%)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            max: 1,
+                            title: { display: true, text: 'Defect Rate (%)' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+
+            // Efficiency Chart
+            const efficiencyCtx = document.getElementById('efficiencyChart').getContext('2d');
+            new Chart(efficiencyCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Spinning Unit 1', 'Stabilization', 'Carbonization', 'Surface Treatment'],
+                    datasets: [{
+                        label: 'Current Month',
+                        data: [91.8, 87.3, 94.2, 89.1],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        pointRadius: 5
+                    }, {
+                        label: 'Last Month',
+                        data: [89.2, 91.8, 93.7, 88.4],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Efficiency (%)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Print function
+        function printReport() {
+            window.print();
+        }
+
+        // Export functions
+        function exportReport(format) {
+            // In a real application, these would trigger actual export functionality
+            const formatMap = {
+                'pdf': 'PDF',
+                'excel': 'Excel',
+                'word': 'Word'
+            };
+            
+            // Show a notification (in real app, would initiate download)
+            alert(`Exporting report to ${formatMap[format]} format...\n\nIn a real application, this would generate and download a ${formatMap[format]} file.`);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initReportCharts();
+        });
+    </script>
+</body>
+</html>

@@ -128,11 +128,15 @@
         .heatmap-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
+            gap: 3px;
             margin-top: var(--space-5);
-            background: var(--gray-200);
-            padding: var(--space-3);
+            background: var(--gray-300);
+            padding: var(--space-4);
             border-radius: var(--radius-lg);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .heatmap-cell {
@@ -142,16 +146,34 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 0.8rem;
-            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            border-radius: var(--radius-md);
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
+            min-height: 45px;
         }
 
         .heatmap-cell:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
             z-index: 10;
             position: relative;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .heatmap-cell:not(.heatmap-header):hover::after {
+            content: 'Click for details';
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            z-index: 20;
         }
 
         .heatmap-header {
@@ -387,6 +409,165 @@
 
         .impact-positive { color: var(--success); }
         .impact-negative { color: var(--error); }
+
+        /* Modal Styles */
+        .correlation-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+        }
+
+        .correlation-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .correlation-details-modal {
+            margin-bottom: var(--space-5);
+        }
+
+        .modal-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        .modal-stat-card {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .modal-stat-card:hover {
+            border-color: var(--secondary-purple);
+            transform: translateY(-2px);
+        }
+
+        .modal-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-1);
+        }
+
+        .modal-stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .modal-chart-container {
+            height: 300px;
+            margin: var(--space-5) 0;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+        }
+
+        .correlation-explanation {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-left: 4px solid var(--secondary-purple);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin: var(--space-4) 0;
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .strength-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: var(--space-2) 0;
+        }
+
+        .strength-strong { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .strength-moderate { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .strength-weak { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .strength-negative { background: rgba(220, 38, 38, 0.1); color: var(--error); }
     </style>
 </head>
 <body>
@@ -870,6 +1051,73 @@
         </div>
     </div>
 
+    <!-- Correlation Modal -->
+    <div id="correlationModal" class="correlation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-chart-line"></i>
+                    <span id="modalTitle">Correlation Details</span>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="correlation-details-modal">
+                <div class="modal-stats-grid">
+                    <div class="modal-stat-card">
+                        <div class="modal-stat-value" id="modalCoefficient">0.87</div>
+                        <div class="modal-stat-label">Correlation Coefficient</div>
+                    </div>
+                    <div class="modal-stat-card">
+                        <div class="modal-stat-value" id="modalPValue">< 0.001</div>
+                        <div class="modal-stat-label">P-value</div>
+                    </div>
+                    <div class="modal-stat-card">
+                        <div class="modal-stat-value" id="modalSample">1,247</div>
+                        <div class="modal-stat-label">Sample Size</div>
+                    </div>
+                    <div class="modal-stat-card">
+                        <div class="modal-stat-value" id="modalConfidence">99.9%</div>
+                        <div class="modal-stat-label">Confidence Level</div>
+                    </div>
+                </div>
+
+                <div class="correlation-explanation">
+                    <div class="explanation-title">
+                        <i class="fas fa-info-circle"></i>
+                        Correlation Strength
+                    </div>
+                    <div id="strengthIndicator" class="strength-indicator strength-strong">
+                        <i class="fas fa-circle"></i>
+                        Strong Positive Correlation
+                    </div>
+                    <p id="correlationExplanation">
+                        This indicates a very strong positive relationship between the two variables. 
+                        As one variable increases, the other tends to increase proportionally.
+                    </p>
+                </div>
+
+                <div class="modal-chart-container">
+                    <canvas id="modalChart"></canvas>
+                </div>
+
+                <div class="correlation-explanation">
+                    <div class="explanation-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Business Implications
+                    </div>
+                    <p id="businessImplication">
+                        This strong correlation suggests that improving machine efficiency 
+                        directly leads to better product quality. Focus on preventive maintenance 
+                        and optimization can yield significant quality improvements.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentRegressionTab = 0;
 
@@ -979,9 +1227,229 @@
             // In a real application, this would update the chart data
         }
 
+        // Correlation data for modal display
+        const correlationData = {
+            'quality-energy': {
+                title: 'Quality vs Energy Usage',
+                coefficient: 0.65,
+                pValue: '< 0.01',
+                sample: '654',
+                confidence: '95.2%',
+                strength: 'moderate',
+                strengthText: 'Moderate Positive Correlation',
+                explanation: 'This moderate positive correlation indicates that higher energy usage tends to correlate with better quality, but the relationship is not as strong as machine efficiency.',
+                businessImplication: 'Energy optimization should balance efficiency with quality requirements. A 10% energy reduction might be possible without significant quality impact.',
+                color: '#f59e0b'
+            },
+            'quality-temp': {
+                title: 'Quality vs Temperature',
+                coefficient: -0.38,
+                pValue: '< 0.05',
+                sample: '892',
+                confidence: '95.0%',
+                strength: 'negative',
+                strengthText: 'Moderate Negative Correlation',
+                explanation: 'This negative correlation suggests that as temperature increases beyond optimal levels, quality decreases. Temperature control is critical.',
+                businessImplication: 'Strict temperature control protocols should be implemented. Each 5°C deviation above setpoint increases defect risk by approximately 3.2%.',
+                color: '#dc2626'
+            },
+            'quality-operator': {
+                title: 'Quality vs Operator Experience',
+                coefficient: 0.42,
+                pValue: '< 0.05',
+                sample: '328',
+                confidence: '92.8%',
+                strength: 'moderate',
+                strengthText: 'Moderate Positive Correlation',
+                explanation: 'Operator experience shows a positive impact on quality, validating the importance of training and skill development programs.',
+                businessImplication: 'Investing in operator training and retaining experienced staff can improve quality by approximately 2.1% per year of experience.',
+                color: '#10b981'
+            },
+            'quality-machine': {
+                title: 'Quality vs Machine Efficiency',
+                coefficient: 0.87,
+                pValue: '< 0.001',
+                sample: '1,247',
+                confidence: '99.9%',
+                strength: 'strong',
+                strengthText: 'Very Strong Positive Correlation',
+                explanation: 'This very strong positive correlation indicates that machine efficiency is the primary driver of product quality in the manufacturing process.',
+                businessImplication: 'Machine maintenance and optimization should be the top priority. Every 1% improvement in machine efficiency typically results in 0.87% quality improvement.',
+                color: '#10b981'
+            },
+            'energy-temp': {
+                title: 'Energy vs Temperature',
+                coefficient: 0.45,
+                pValue: '< 0.05',
+                sample: '654',
+                confidence: '95.0%',
+                strength: 'moderate',
+                strengthText: 'Moderate Positive Correlation',
+                explanation: 'Higher temperatures require more energy, which is expected. This correlation helps in energy planning and cost forecasting.',
+                businessImplication: 'Temperature optimization can lead to significant energy savings. Process efficiency improvements should focus on heat management.',
+                color: '#f59e0b'
+            }
+        };
+
+        // Modal functions
+        function openModal(variable1, variable2) {
+            const key = `${variable1}-${variable2}`;
+            const data = correlationData[key];
+            
+            if (!data) return;
+            
+            // Update modal content
+            document.getElementById('modalTitle').textContent = data.title;
+            document.getElementById('modalCoefficient').textContent = data.coefficient;
+            document.getElementById('modalPValue').textContent = data.pValue;
+            document.getElementById('modalSample').textContent = data.sample;
+            document.getElementById('modalConfidence').textContent = data.confidence;
+            
+            // Update strength indicator
+            const strengthIndicator = document.getElementById('strengthIndicator');
+            strengthIndicator.className = `strength-indicator strength-${data.strength}`;
+            strengthIndicator.innerHTML = `<i class="fas fa-circle"></i> ${data.strengthText}`;
+            
+            // Update explanations
+            document.getElementById('correlationExplanation').textContent = data.explanation;
+            document.getElementById('businessImplication').textContent = data.businessImplication;
+            
+            // Show modal
+            document.getElementById('correlationModal').classList.add('active');
+            
+            // Create correlation chart
+            createModalChart(data);
+        }
+
+        function closeModal() {
+            document.getElementById('correlationModal').classList.remove('active');
+            
+            // Destroy existing chart
+            const existingChart = Chart.getChart('modalChart');
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        }
+
+        function createModalChart(data) {
+            // Destroy existing chart first
+            const existingChart = Chart.getChart('modalChart');
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            const ctx = document.getElementById('modalChart').getContext('2d');
+            const chartData = generateCorrelationData(data.coefficient);
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points',
+                        data: chartData,
+                        backgroundColor: data.color + '80',
+                        borderColor: data.color,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }, {
+                        label: 'Trend Line',
+                        data: getTrendLine(data.coefficient),
+                        type: 'line',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        borderWidth: 3,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Variable 1'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Variable 2'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateCorrelationData(coefficient) {
+            const data = [];
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * 100;
+                const y = x * coefficient + Math.random() * 20 * (1 - Math.abs(coefficient));
+                data.push({ x, y });
+            }
+            return data;
+        }
+
+        function getTrendLine(coefficient) {
+            return [
+                { x: 0, y: coefficient < 0 ? 80 : 10 },
+                { x: 100, y: coefficient < 0 ? 20 : 90 }
+            ];
+        }
+
+        // Add click event listeners to heatmap cells
+        function addHeatmapListeners() {
+            const heatmapCells = document.querySelectorAll('.heatmap-cell:not(.heatmap-header)');
+            heatmapCells.forEach((cell, index) => {
+                const row = Math.floor(index / 5) + 1;
+                const col = (index % 5) + 1;
+                
+                const variables = ['quality', 'energy', 'temp', 'operator', 'machine'];
+                const rowVar = variables[row - 1];
+                const colVar = variables[col - 1];
+                
+                if (rowVar && colVar && rowVar !== colVar) {
+                    cell.addEventListener('click', () => {
+                        const key1 = `${rowVar}-${colVar}`;
+                        const key2 = `${colVar}-${rowVar}`;
+                        
+                        if (correlationData[key1]) {
+                            openModal(rowVar, colVar);
+                        } else if (correlationData[key2]) {
+                            openModal(colVar, rowVar);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('correlationModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             initAnalysisCharts();
+            addHeatmapListeners();
             
             // Add event listeners for scatter plot selectors
             document.getElementById('xAxisSelect').addEventListener('change', updateScatterPlot);

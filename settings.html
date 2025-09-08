@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - CF Manufacturing System</title>
+    <link rel="stylesheet" href="common-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .settings-header {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-6);
+            text-align: center;
+        }
+
+        .settings-title {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-4);
+            font-weight: bold;
+        }
+
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--space-6);
+        }
+
+        .settings-sidebar {
+            background: white;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-6);
+        }
+
+        .settings-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .settings-nav-item {
+            margin-bottom: var(--space-2);
+        }
+
+        .settings-nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            text-decoration: none;
+            color: var(--gray-700);
+            border-radius: var(--radius-lg);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .settings-nav-link:hover {
+            background: var(--gray-50);
+            color: var(--primary-blue);
+            transform: translateX(4px);
+        }
+
+        .settings-nav-link.active {
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .settings-nav-link.active:hover {
+            transform: translateX(0);
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .settings-section {
+            display: none;
+            padding: var(--space-8);
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .section-description {
+            color: var(--gray-600);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .settings-form {
+            display: grid;
+            gap: var(--space-6);
+        }
+
+        .form-group {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .form-input {
+            padding: var(--space-3);
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--secondary-purple);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            padding: var(--space-3);
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--secondary-purple);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-300);
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--secondary-purple);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .settings-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+            border-left: 4px solid var(--info);
+        }
+
+        .settings-card.warning { border-left-color: var(--warning); }
+        .settings-card.success { border-left-color: var(--success); }
+        .settings-card.error { border-left-color: var(--error); }
+
+        .card-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-5);
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            color: white;
+            border: none;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--secondary-purple);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .alert-threshold {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            margin-bottom: var(--space-2);
+        }
+
+        .threshold-label {
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .threshold-input {
+            width: 80px;
+            padding: var(--space-2);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            text-align: center;
+        }
+
+        .threshold-unit {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        .user-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-purple), var(--secondary-purple-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            margin: 0 auto var(--space-4);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--success);
+            border: 3px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .system-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin: var(--space-5) 0;
+        }
+
+        .status-item {
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .status-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-3);
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .status-healthy { background: var(--success); }
+        .status-warning { background: var(--warning); }
+        .status-error { background: var(--error); }
+        .status-info { background: var(--info); }
+
+        .status-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: var(--space-1);
+        }
+
+        .status-value {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 968px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-sidebar {
+                position: static;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <i class="fas fa-industry"></i>
+                CF Manufacturing System
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-item">Home</a></li>
+                <li><a href="carbon_fiber_dashboard.html" class="nav-item">Dashboard</a></li>
+                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
+                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
+                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
+                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
+                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
+                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
+                <li><a href="chronological-review.html" class="nav-item">Timeline</a></li>
+                <li><a href="reports.html" class="nav-item">Reports</a></li>
+                <li><a href="settings.html" class="nav-item active">Settings</a></li>
+            </ul>
+            <div class="nav-user">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="settings-container">
+        <!-- Settings Header -->
+        <div class="settings-header">
+            <div class="settings-title">
+                <i class="fas fa-cog"></i>
+                System Settings
+            </div>
+            <p style="color: var(--gray-600); font-size: 1.1rem;">Manage your CF Manufacturing System preferences and configurations</p>
+        </div>
+
+        <div class="settings-layout">
+            <!-- Settings Sidebar -->
+            <div class="settings-sidebar">
+                <ul class="settings-nav">
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link active" data-section="profile">
+                            <i class="fas fa-user"></i>
+                            User Profile
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="system">
+                            <i class="fas fa-cogs"></i>
+                            System Settings
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="alerts">
+                            <i class="fas fa-bell"></i>
+                            Alerts & Notifications
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="display">
+                            <i class="fas fa-desktop"></i>
+                            Display Settings
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="security">
+                            <i class="fas fa-shield-alt"></i>
+                            Security
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="data">
+                            <i class="fas fa-database"></i>
+                            Data Management
+                        </a>
+                    </li>
+                    <li class="settings-nav-item">
+                        <a href="#" class="settings-nav-link" data-section="maintenance">
+                            <i class="fas fa-tools"></i>
+                            System Maintenance
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <!-- User Profile Section -->
+                <div class="settings-section active" id="profile">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-user"></i>
+                            User Profile
+                        </h2>
+                        <p class="section-description">Manage your personal information and account preferences</p>
+                    </div>
+
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                        <div class="avatar-upload">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+
+                    <form class="settings-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Full Name
+                                </label>
+                                <input type="text" class="form-input" value="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" class="form-input" value="john.doe@cfmanufacturing.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-id-badge"></i>
+                                    Employee ID
+                                </label>
+                                <input type="text" class="form-input" value="EMP-2024-001" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-briefcase"></i>
+                                    Department
+                                </label>
+                                <select class="form-select">
+                                    <option value="production">Production</option>
+                                    <option value="quality" selected>Quality Control</option>
+                                    <option value="maintenance">Maintenance</option>
+                                    <option value="supervision">Supervision</option>
+                                    <option value="admin">Administration</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Phone Number
+                                </label>
+                                <input type="tel" class="form-input" value="+1 (555) 123-4567">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-clock"></i>
+                                    Default Shift
+                                </label>
+                                <select class="form-select">
+                                    <option value="day" selected>Day Shift (6AM-2PM)</option>
+                                    <option value="evening">Evening Shift (2PM-10PM)</option>
+                                    <option value="night">Night Shift (10PM-6AM)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                            <button type="button" class="btn-secondary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- System Settings Section -->
+                <div class="settings-section" id="system">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-cogs"></i>
+                            System Settings
+                        </h2>
+                        <p class="section-description">Configure system-wide preferences and operational parameters</p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Performance Settings
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Data Refresh Rate</label>
+                                <select class="form-select">
+                                    <option value="5">Every 5 seconds</option>
+                                    <option value="10" selected>Every 10 seconds</option>
+                                    <option value="30">Every 30 seconds</option>
+                                    <option value="60">Every minute</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Chart Animation</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card success">
+                        <h4 class="card-title">
+                            <i class="fas fa-server"></i>
+                            System Status
+                        </h4>
+                        <div class="system-status">
+                            <div class="status-item">
+                                <div class="status-icon status-healthy">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="status-label">Database</div>
+                                <div class="status-value">Connected</div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon status-healthy">
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <div class="status-label">Network</div>
+                                <div class="status-value">Stable</div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon status-warning">
+                                    <i class="fas fa-exclamation"></i>
+                                </div>
+                                <div class="status-label">Storage</div>
+                                <div class="status-value">78% Full</div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon status-healthy">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="status-label">Security</div>
+                                <div class="status-value">Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts & Notifications Section -->
+                <div class="settings-section" id="alerts">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-bell"></i>
+                            Alerts & Notifications
+                        </h2>
+                        <p class="section-description">Configure alert thresholds and notification preferences</p>
+                    </div>
+
+                    <div class="settings-card warning">
+                        <h4 class="card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Alert Thresholds
+                        </h4>
+                        
+                        <div class="alert-threshold">
+                            <div class="threshold-label">Temperature Deviation</div>
+                            <input type="number" class="threshold-input" value="5" min="1" max="20">
+                            <div class="threshold-unit">°C</div>
+                        </div>
+                        
+                        <div class="alert-threshold">
+                            <div class="threshold-label">Quality Rate Minimum</div>
+                            <input type="number" class="threshold-input" value="95" min="80" max="99">
+                            <div class="threshold-unit">%</div>
+                        </div>
+                        
+                        <div class="alert-threshold">
+                            <div class="threshold-label">Equipment Efficiency</div>
+                            <input type="number" class="threshold-input" value="85" min="70" max="95">
+                            <div class="threshold-unit">%</div>
+                        </div>
+                        
+                        <div class="alert-threshold">
+                            <div class="threshold-label">Production Rate</div>
+                            <input type="number" class="threshold-input" value="120" min="50" max="200">
+                            <div class="threshold-unit">kg/hr</div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-envelope"></i>
+                            Notification Preferences
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email Notifications</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">SMS Alerts</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Settings Section -->
+                <div class="settings-section" id="display">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-desktop"></i>
+                            Display Settings
+                        </h2>
+                        <p class="section-description">Customize the appearance and layout of your dashboard</p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-palette"></i>
+                            Theme & Appearance
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Color Theme</label>
+                                <select class="form-select">
+                                    <option value="default" selected>Default Blue</option>
+                                    <option value="dark">Dark Mode</option>
+                                    <option value="green">Industrial Green</option>
+                                    <option value="purple">Purple Gradient</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Language</label>
+                                <select class="form-select">
+                                    <option value="en" selected>English</option>
+                                    <option value="ja">Japanese (日本語)</option>
+                                    <option value="zh">Chinese (中文)</option>
+                                    <option value="ko">Korean (한국어)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Dashboard Layout
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Default Dashboard</label>
+                                <select class="form-select">
+                                    <option value="overview" selected>Production Overview</option>
+                                    <option value="quality">Quality Focus</option>
+                                    <option value="efficiency">Efficiency Dashboard</option>
+                                    <option value="custom">Custom Layout</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Auto-refresh Dashboard</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="settings-section" id="security">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Security Settings
+                        </h2>
+                        <p class="section-description">Manage security protocols and access controls</p>
+                    </div>
+
+                    <div class="settings-card error">
+                        <h4 class="card-title">
+                            <i class="fas fa-key"></i>
+                            Authentication & Access
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Session Timeout</label>
+                                <select class="form-select">
+                                    <option value="15">15 minutes</option>
+                                    <option value="30">30 minutes</option>
+                                    <option value="60" selected>1 hour</option>
+                                    <option value="240">4 hours</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Two-Factor Authentication</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-history"></i>
+                            Activity Logging
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Log User Actions</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Log Retention Period</label>
+                                <select class="form-select">
+                                    <option value="30">30 days</option>
+                                    <option value="90" selected>90 days</option>
+                                    <option value="180">6 months</option>
+                                    <option value="365">1 year</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="settings-section" id="data">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-database"></i>
+                            Data Management
+                        </h2>
+                        <p class="section-description">Configure data storage, backup, and archival policies</p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-save"></i>
+                            Backup Settings
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Automatic Backup</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Backup Frequency</label>
+                                <select class="form-select">
+                                    <option value="hourly">Every Hour</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-archive"></i>
+                            Data Retention
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Production Data</label>
+                                <select class="form-select">
+                                    <option value="1">1 year</option>
+                                    <option value="2" selected>2 years</option>
+                                    <option value="5">5 years</option>
+                                    <option value="permanent">Permanent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Quality Records</label>
+                                <select class="form-select">
+                                    <option value="5">5 years</option>
+                                    <option value="7" selected>7 years</option>
+                                    <option value="10">10 years</option>
+                                    <option value="permanent">Permanent</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-secondary">
+                            <i class="fas fa-download"></i>
+                            Export Data
+                        </button>
+                        <button type="button" class="btn-secondary">
+                            <i class="fas fa-upload"></i>
+                            Import Data
+                        </button>
+                        <button type="button" class="btn-primary">
+                            <i class="fas fa-backup"></i>
+                            Manual Backup
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Maintenance Section -->
+                <div class="settings-section" id="maintenance">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-tools"></i>
+                            System Maintenance
+                        </h2>
+                        <p class="section-description">System diagnostics, updates, and maintenance tools</p>
+                    </div>
+
+                    <div class="settings-card warning">
+                        <h4 class="card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Maintenance Mode
+                        </h4>
+                        <p style="color: var(--gray-700); margin-bottom: var(--space-4); line-height: 1.5;">
+                            Maintenance mode will temporarily disable user access to perform system updates and maintenance tasks.
+                        </p>
+                        <div class="button-group">
+                            <button type="button" class="btn-secondary">
+                                <i class="fas fa-power-off"></i>
+                                Enable Maintenance Mode
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4 class="card-title">
+                            <i class="fas fa-broom"></i>
+                            System Cleanup
+                        </h4>
+                        <div class="button-group">
+                            <button type="button" class="btn-secondary">
+                                <i class="fas fa-trash"></i>
+                                Clear Temporary Files
+                            </button>
+                            <button type="button" class="btn-secondary">
+                                <i class="fas fa-history"></i>
+                                Clear Old Logs
+                            </button>
+                            <button type="button" class="btn-secondary">
+                                <i class="fas fa-sync"></i>
+                                Optimize Database
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card success">
+                        <h4 class="card-title">
+                            <i class="fas fa-info-circle"></i>
+                            System Information
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: var(--space-2); font-weight: 600; color: var(--gray-700);">System Version:</td>
+                                <td style="padding: var(--space-2); color: var(--gray-600);">CF Manufacturing System v2.4.1</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: var(--space-2); font-weight: 600; color: var(--gray-700);">Last Update:</td>
+                                <td style="padding: var(--space-2); color: var(--gray-600);">November 15, 2024</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: var(--space-2); font-weight: 600; color: var(--gray-700);">Uptime:</td>
+                                <td style="padding: var(--space-2); color: var(--gray-600);">23 days, 14 hours</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: var(--space-2); font-weight: 600; color: var(--gray-700);">License:</td>
+                                <td style="padding: var(--space-2); color: var(--gray-600);">Enterprise License (Valid until Dec 2025)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Settings navigation
+        function initSettingsNavigation() {
+            const navLinks = document.querySelectorAll('.settings-nav-link');
+            const sections = document.querySelectorAll('.settings-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetSection = this.getAttribute('data-section');
+                    
+                    // Update navigation
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update sections
+                    sections.forEach(section => section.classList.remove('active'));
+                    document.getElementById(targetSection).classList.add('active');
+                });
+            });
+        }
+
+        // Form handling
+        function initFormHandling() {
+            const forms = document.querySelectorAll('form');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: var(--success);
+                        color: white;
+                        padding: var(--space-4) var(--space-6);
+                        border-radius: var(--radius-md);
+                        box-shadow: var(--shadow-lg);
+                        z-index: 1000;
+                        animation: slideIn 0.3s ease-out;
+                    `;
+                    successMessage.innerHTML = '<i class="fas fa-check"></i> Settings saved successfully!';
+                    
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 3000);
+                });
+            });
+        }
+
+        // Button actions
+        function initButtonActions() {
+            // Change Password button
+            const changePasswordBtn = document.querySelector('.btn-secondary');
+            if (changePasswordBtn && changePasswordBtn.textContent.includes('Change Password')) {
+                changePasswordBtn.addEventListener('click', function() {
+                    alert('Password change functionality would be implemented here.\nThis would typically open a secure modal dialog.');
+                });
+            }
+
+            // Export/Import buttons
+            const exportBtn = document.querySelector('button[onclick*="Export"]') || 
+                            document.querySelectorAll('.btn-secondary')[document.querySelectorAll('.btn-secondary').length - 3];
+            const importBtn = document.querySelector('button[onclick*="Import"]') || 
+                            document.querySelectorAll('.btn-secondary')[document.querySelectorAll('.btn-secondary').length - 2];
+            const backupBtn = document.querySelector('button[onclick*="Backup"]') || 
+                            document.querySelectorAll('.btn-primary')[document.querySelectorAll('.btn-primary').length - 1];
+
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    alert('Data export functionality would be implemented here.\nThis would generate and download a comprehensive data export file.');
+                });
+            }
+
+            if (importBtn) {
+                importBtn.addEventListener('click', function() {
+                    alert('Data import functionality would be implemented here.\nThis would allow importing data from external sources.');
+                });
+            }
+
+            if (backupBtn) {
+                backupBtn.addEventListener('click', function() {
+                    alert('Manual backup initiated.\nIn a real system, this would create a full system backup.');
+                });
+            }
+
+            // Maintenance mode button
+            const maintenanceBtn = document.querySelector('button[onclick*="Maintenance"]') || 
+                                 Array.from(document.querySelectorAll('.btn-secondary')).find(btn => 
+                                     btn.textContent.includes('Maintenance Mode'));
+            
+            if (maintenanceBtn) {
+                maintenanceBtn.addEventListener('click', function() {
+                    const confirm = window.confirm('Are you sure you want to enable maintenance mode?\nThis will temporarily disable user access to the system.');
+                    if (confirm) {
+                        alert('Maintenance mode would be enabled here.\nUsers would be notified and access would be restricted.');
+                    }
+                });
+            }
+
+            // System cleanup buttons
+            const cleanupButtons = document.querySelectorAll('button[onclick*="Clear"], button[onclick*="Optimize"]');
+            cleanupButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    alert(`${action} functionality would be implemented here.\nThis would perform the requested maintenance task.`);
+                });
+            });
+        }
+
+        // Avatar upload
+        function initAvatarUpload() {
+            const avatar = document.querySelector('.user-avatar');
+            const avatarUpload = document.querySelector('.avatar-upload');
+            
+            if (avatarUpload) {
+                avatarUpload.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // Create file input
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = 'image/*';
+                    
+                    fileInput.onchange = function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            alert(`Avatar upload functionality would be implemented here.\nSelected file: ${file.name}`);
+                        }
+                    };
+                    
+                    fileInput.click();
+                });
+            }
+        }
+
+        // Initialize all functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initSettingsNavigation();
+            initFormHandling();
+            initButtonActions();
+            initAvatarUpload();
+        });
+    </script>
+</body>
+</html>

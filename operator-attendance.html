@@ -937,24 +937,36 @@
                     datasets: [{
                         label: 'Present',
                         data: [30, 28, 29, 31, 28, 22, 24],
-                        borderColor: var('--success'),
+                        borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#ffffff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
                     }, {
                         label: 'Absent',
                         data: [2, 4, 3, 1, 4, 2, 3],
-                        borderColor: var('--error'),
+                        borderColor: '#dc2626',
                         backgroundColor: 'rgba(220, 38, 38, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#dc2626',
+                        pointBorderColor: '#ffffff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
                     }, {
                         label: 'Late',
                         data: [1, 2, 1, 0, 3, 1, 1],
-                        borderColor: var('--warning'),
+                        borderColor: '#f59e0b',
                         backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
                     }]
                 },
                 options: {
@@ -962,24 +974,90 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#374151',
+                            bodyColor: '#6b7280',
+                            borderColor: '#d1d5db',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                title: function(context) {
+                                    return `${context[0].label} - Week of ${getCurrentWeek()}`;
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} operators`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Operators',
+                                color: '#374151',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
                             grid: {
-                                color: 'rgba(0,0,0,0.1)'
+                                color: 'rgba(0,0,0,0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 5,
+                                color: '#6b7280'
                             }
                         },
                         x: {
+                            title: {
+                                display: true,
+                                text: 'Days of the Week',
+                                color: '#374151',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
                             grid: {
-                                color: 'rgba(0,0,0,0.1)'
+                                color: 'rgba(0,0,0,0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6b7280'
                             }
                         }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
                     }
                 }
             });
+        }
+
+        // Helper function to get current week dates
+        function getCurrentWeek() {
+            const today = new Date();
+            const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+            const endOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+            return `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()} - ${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}`;
         }
 
         // Set today's date as default
