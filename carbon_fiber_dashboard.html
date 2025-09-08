@@ -28,45 +28,39 @@
             padding: 20px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .header-stats {
+        .performance-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            margin-top: 20px;
+            margin-bottom: 30px;
         }
 
-        .stat-card {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 8px;
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius-xl);
             text-align: center;
-            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
         }
 
-        .stat-value {
-            font-size: 2rem;
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .summary-value {
+            font-size: 2.2rem;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: var(--primary-blue);
         }
 
-        .stat-label {
+        .summary-label {
             font-size: 0.9rem;
-            opacity: 0.8;
+            color: var(--gray-600);
+            font-weight: 500;
         }
 
         .process-flow {
@@ -398,7 +392,7 @@
                 padding: 10px;
             }
             
-            .header h1 {
+            .page-title {
                 font-size: 1.8rem;
             }
             
@@ -419,8 +413,8 @@
 </head>
 <body>
     <!-- Navigation -->
-    <div class="navbar">
-        <div class="nav-container">
+    <nav class="nav-container">
+        <div class="nav-content">
             <div class="nav-logo">
                 <i class="fas fa-industry"></i>
                 CF Manufacturing System
@@ -445,29 +439,35 @@
                 <span>John Doe</span>
             </div>
         </div>
-    </div>
+    </nav>
 
     <div class="dashboard-container">
-        <!-- Header Section -->
-        <div class="header">
-            <h1><i class="fas fa-industry"></i> Carbon Fiber Manufacturing Dashboard</h1>
-            <div class="header-stats">
-                <div class="stat-card">
-                    <div class="stat-value">85.2%</div>
-                    <div class="stat-label">Overall Efficiency</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">142 kg/hr</div>
-                    <div class="stat-label">Production Rate</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">98.7%</div>
-                    <div class="stat-label">Quality Rate</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Active Alerts</div>
-                </div>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-industry"></i>
+                Carbon Fiber Manufacturing Dashboard
+            </h1>
+            <div class="breadcrumb">Dashboard / Main Overview</div>
+        </div>
+        
+        <!-- Performance Summary -->
+        <div class="performance-summary">
+            <div class="summary-card">
+                <div class="summary-value">85.2%</div>
+                <div class="summary-label">Overall Efficiency</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">142 kg/hr</div>
+                <div class="summary-label">Production Rate</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">98.7%</div>
+                <div class="summary-label">Quality Rate</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">3</div>
+                <div class="summary-label">Active Alerts</div>
             </div>
         </div>
 
@@ -896,12 +896,12 @@
             const qualityRate = 98 + Math.random() * 2;
             const efficiency = 84 + Math.random() * 4;
             
-            // Update header stats
-            document.querySelector('.header-stats .stat-card:nth-child(2) .stat-value').textContent = 
+            // Update performance summary
+            document.querySelector('.performance-summary .summary-card:nth-child(2) .summary-value').textContent = 
                 productionRate.toFixed(1) + ' kg/hr';
-            document.querySelector('.header-stats .stat-card:nth-child(3) .stat-value').textContent = 
+            document.querySelector('.performance-summary .summary-card:nth-child(3) .summary-value').textContent = 
                 qualityRate.toFixed(1) + '%';
-            document.querySelector('.header-stats .stat-card:nth-child(1) .stat-value').textContent = 
+            document.querySelector('.performance-summary .summary-card:nth-child(1) .summary-value').textContent = 
                 efficiency.toFixed(1) + '%';
         }
 
