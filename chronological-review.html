@@ -522,34 +522,35 @@
             color: var(--gray-600);
         }
     </style>
+<link rel="stylesheet" href="dashboard-styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav-container">
-        <div class="nav-content">
-            <div class="nav-logo">
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
                 <i class="fas fa-industry"></i>
-                CF Manufacturing System
+                <span>CF Manufacturing</span>
             </div>
-            <ul class="nav-menu">
-                <li><a href="main_dashboard.html" class="nav-item">Dashboard</a></li>
-                <li><a href="machine-status.html" class="nav-item">Machines</a></li>
-                <li><a href="product-traceability.html" class="nav-item">Traceability</a></li>
-                <li><a href="operator-attendance.html" class="nav-item">Operators</a></li>
-                <li><a href="quality-tracking.html" class="nav-item">Quality</a></li>
-                <li><a href="correlation-analysis.html" class="nav-item">Analytics</a></li>
-                <li><a href="energy-monitoring.html" class="nav-item">Energy</a></li>
-                <li><a href="predictive-maintenance.html" class="nav-item">Maintenance</a></li>
-                <li><a href="chronological-review.html" class="nav-item active">Timeline</a></li>
-                <li><a href="reports.html" class="nav-item">Reports</a></li>
-                <li><a href="settings.html" class="nav-item">Settings</a></li>
+            <ul class="sidebar-menu">
+                <li class="menu-item"><a class="nav-link" href="main_dashboard.html"><i class="fas fa-tachometer-alt"></i> Main Dashboard</a></li>
+                <li class="menu-category">Manufacturing</li>
+                <li class="menu-item"><a class="nav-link" href="machine-status.html"><i class="fas fa-cogs"></i> Machine Status</a></li>
+                <li class="menu-item"><a class="nav-link" href="product-traceability.html"><i class="fas fa-route"></i> Product Traceability</a></li>
+                <li class="menu-item"><a class="nav-link" href="quality-tracking.html"><i class="fas fa-award"></i> Quality Tracking</a></li>
+                <li class="menu-category">Analysis</li>
+                <li class="menu-item"><a class="nav-link" href="correlation-analysis.html"><i class="fas fa-chart-scatter"></i> Correlation Analysis</a></li>
+                <li class="menu-item"><a class="nav-link" href="energy-monitoring.html"><i class="fas fa-bolt"></i> Energy Monitoring</a></li>
+                <li class="menu-item"><a class="nav-link" href="predictive-maintenance.html"><i class="fas fa-wrench"></i> Predictive Maintenance</a></li>
+                <li class="menu-item"><a class="nav-link" href="chronological-review.html"><i class="fas fa-history"></i> Chronological Review</a></li>
+                <li class="menu-item"><a class="nav-link" href="reports.html"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li class="menu-category">Management</li>
+                <li class="menu-item"><a class="nav-link" href="operator-attendance.html"><i class="fas fa-users"></i> Operator Attendance</a></li>
+                <li class="menu-item"><a class="nav-link" href="operator-training.html"><i class="fas fa-graduation-cap"></i> Operator Training</a></li>
+                <li class="menu-item"><a class="nav-link" href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
             </ul>
-            <div class="nav-user">
-                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
-                <span>John Doe</span>
-            </div>
-        </div>
-    </nav>
+        </aside>
+        <main class="main-content">
+    <!-- Navigation -->
 
     <div class="dashboard-container">
         <!-- Page Header -->
@@ -1236,5 +1237,25 @@
             console.log('Checking for new timeline events...');
         }, 30000);
     </script>
+        </main>
+    </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === '' || currentPage === 'index.html') { return; }
+
+    document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
+      const linkPage = link.getAttribute('href').split('/').pop();
+
+      link.parentElement.classList.remove('active');
+      link.classList.remove('active');
+
+      if (linkPage === currentPage) {
+        link.parentElement.classList.add('active');
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
 </body>
 </html>
